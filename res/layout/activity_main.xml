@@ -1,0 +1,72 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".MainActivity" >
+
+    <TextView
+        android:id="@+id/text_title"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="@android:color/holo_blue_bright"
+        android:textSize="28sp"
+        android:fontFamily="sans-serif-light" />
+
+    <ProgressBar
+        android:id="@+id/progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/text_title"
+        android:layout_below="@+id/text_title"
+        android:layout_marginTop="8dp" 
+        android:progress="0"
+        android:max="1" />
+
+    <TextView
+        android:id="@+id/text_sub"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/progress"
+        android:layout_below="@+id/progress"
+        android:layout_marginTop="8dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:fontFamily="sans-serif-light" />
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignRight="@+id/text_sub"
+        android:gravity="right" >
+
+        <Button
+            android:id="@+id/button_check_now"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/button_check_now"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:onClick="onButtonCheckNowClick" />
+
+        <Button
+            android:id="@+id/button_flash_now"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/button_flash_now"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:onClick="onButtonFlashNowClick" />
+    </LinearLayout>
+
+</RelativeLayout>

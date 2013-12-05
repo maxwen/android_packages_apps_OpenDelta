@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OpenDelta</string>
+    <string name="title">System Updates</string>
+
+    <string name="action_about">About</string>
+    
+    <string name="about_content"><![CDATA[
+        Copyright &copy; _COPYRIGHT_OPENDELTA_ <b>Jorrit \'Chainfire\' Jongma</b><br>
+        <br>
+        Originally created for <b>The OmniROM Project</b><br>
+        <br>
+        Licensed under the terms of the <b>GNU General Public License, version 3.0 (GPLv3)</b><br>
+        <br>
+        Delta decoding based on <b>xdelta</b>, copyright &copy; _COPYRIGHT_XDELTA_ <b>Joshua MacDonald</b><br>
+    ]]></string>
+    
+    <string name="state_action_none">Your system is up to date</string>
+	<string name="state_action_checking">Checking for updates &#8230;</string>
+	<string name="state_action_checking_md5">Verifying file &#8230;</string>
+	<string name="state_action_searching">Searching for files &#8230;</string>
+	<string name="state_action_searching_md5">Verifying file &#8230;</string>
+	<string name="state_action_downloading">Downloading &#8230;</string>
+	<string name="state_action_applying">Patching &#8230;</string>	
+	<string name="state_action_applying_patch">Patching &#8230;</string>
+	<string name="state_action_applying_md5">Verifying file &#8230;</string>
+	<string name="state_action_copying">Copying file &#8230;</string>
+	<string name="state_action_ready">An update is available</string>
+	<string name="state_error_disk_space">Not enough disk space !</string>
+	<string name="state_error_unknown">Unknown error</string>
+	
+	<string name="error_disk_space_sub" formatted="false">%d MiB available, %d MiB required</string>
+	
+	<string name="notify_update_available">An update is available</string>
+	<string name="notify_checking">Checking for updates &#8230;</string>
+	
+	<string name="last_checked" formatted="false">Last checked on %s at %s</string>
+	<string name="last_checked_never">We\'ve never checked, maybe you would like to do so ?</string>
+	<string name="last_checked_filename" formatted="false">%s, last checked on %s at %s</string>
+		
+	<string name="button_check_now">Check now &#8230;</string>
+	<string name="button_flash_now">Flash now &#8230;</string>
+</resources>

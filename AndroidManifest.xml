@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="eu.chainfire.opendelta"
+    android:versionCode="10"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="19"
+        android:targetSdkVersion="19" />
+
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.BROADCAST_STICKY" />
+    <uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+	<uses-permission android:name="android.permission.ACCESS_CACHE_FILESYSTEM" />
+    <uses-permission android:name="android.permission.REBOOT" />
+    
+    <application
+        android:allowBackup="false"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.OpenDelta"
+        android:icon="@drawable/ic_launcher_settings" >
+        
+        <activity
+            android:name="eu.chainfire.opendelta.MainActivity"
+            android:label="@string/title"
+            android:launchMode="singleInstance"> 
+            <intent-filter android:priority="2147483647" >
+                <!-- 
+                	Show up unde: Settings, About Device, System Updates. 
+                	Assuming that is not disabled. There's a config option for that.
+                	APK needs to be in priv-app for this to work!
+                -->
+                <action android:name="android.settings.SYSTEM_UPDATE_SETTINGS" />
+                
+                <!-- Show in launcher for debugging purposed -->
+                <!--
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                -->
+			</intent-filter>
+        </activity>
+        
+		<receiver android:name=".BootCompleteReceiver">
+			<intent-filter>
+				<action android:name="android.intent.action.BOOT_COMPLETED" />
+				<category android:name="android.intent.category.HOME" />
+			</intent-filter>
+		</receiver>
+        
+        <service android:name=".UpdateService" android:exported="false" />
+    </application>
+
+</manifest>
