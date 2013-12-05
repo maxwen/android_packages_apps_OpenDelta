@@ -51,6 +51,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
 import android.os.Environment;
@@ -71,7 +72,8 @@ implements
 	OnNetworkStateListener,
 	OnBatteryStateListener,
 	OnScreenStateListener,
-	OnWantUpdateCheckListener
+	OnWantUpdateCheckListener,
+	OnSharedPreferenceChangeListener
 {
 	public static void start(Context context) {
 		start(context, null);
@@ -138,6 +140,9 @@ implements
 	
 	private static final String PREF_LAST_CHECK_TIME_NAME = "last_check_time";
 	private static final long PREF_LAST_CHECK_TIME_DEFAULT = 0L;
+	
+	public static final String PREF_AUTO_UPDATE_NETWORKS_NAME = "auto_update_networks";
+	public static final int PREF_AUTO_UPDATE_NETWORKS_DEFAULT = NetworkState.ALLOW_WIFI | NetworkState.ALLOW_ETHERNET;	
 	
 	public static boolean isStateBusy(String state) {
 		return !(
@@ -231,25 +236,28 @@ implements
 		handlerThread.start();
 		handler = new Handler(handlerThread.getLooper());
 		
+		notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+		prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
 		scheduler = new Scheduler(this, this);
 
 		networkState = new NetworkState();
-		networkState.start(this, this, true);
+		networkState.start(this, this, prefs.getInt(PREF_AUTO_UPDATE_NETWORKS_NAME, PREF_AUTO_UPDATE_NETWORKS_DEFAULT));
 		
 		batteryState = new BatteryState();
 		batteryState.start(this, this, 50, true);
 		
 		screenState = new ScreenState();
 		screenState.start(this, this);
+		
+		prefs.registerOnSharedPreferenceChangeListener(this);
 				
-		notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-		prefs = PreferenceManager.getDefaultSharedPreferences(this);
-
 		autoState();
 	}
 
 	@Override
 	public void onDestroy() {
+		prefs.unregisterOnSharedPreferenceChangeListener(this);
 		networkState.stop();
 		batteryState.stop();
 		screenState.stop();
@@ -301,11 +309,18 @@ implements
 		Logger.log("screen state --> %d", state ? 1 : 0);
 		scheduler.onScreenState(state);
 	}
-	
+			
 	@Override
 	public boolean onWantUpdateCheck() {
 		Logger.log("Scheduler wants to check for updates");
 		return checkForUpdates(false);
+	}
+
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+		if (PREF_AUTO_UPDATE_NETWORKS_NAME.equals(key)) {
+			networkState.updateFlags(sharedPreferences.getInt(PREF_AUTO_UPDATE_NETWORKS_NAME, PREF_AUTO_UPDATE_NETWORKS_DEFAULT));
+		}
 	}
 
 	private void autoState() {
