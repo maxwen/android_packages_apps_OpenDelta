@@ -17,7 +17,7 @@
         android:paddingRight="16dp"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="@android:color/holo_blue_bright"
-        android:textSize="28sp"
+        android:textSize="@dimen/TextLarger"
         android:fontFamily="sans-serif-light" />
 
     <ProgressBar
