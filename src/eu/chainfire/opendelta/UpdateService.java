@@ -312,7 +312,7 @@ implements
 			
 	@Override
 	public boolean onWantUpdateCheck() {
-		Logger.d("Scheduler wants to check for updates");
+		Logger.i("Scheduler requests check for updates");
 		return checkForUpdates(false);
 	}
 
@@ -334,9 +334,11 @@ implements
 		}
 		
 		if (filename == null) {
+			Logger.i("System up to date");
 			stopNotification();
 			updateState(STATE_ACTION_NONE, null, null, null, null, prefs.getLong(PREF_LAST_CHECK_TIME_NAME, PREF_LAST_CHECK_TIME_DEFAULT));
 		} else {
+			Logger.i("Update found: %s", filename);
 			startNotification();
 			updateState(STATE_ACTION_READY, null, null, null, (new File(filename)).getName(), prefs.getLong(PREF_LAST_CHECK_TIME_NAME, PREF_LAST_CHECK_TIME_DEFAULT));
 		}		
@@ -588,8 +590,9 @@ implements
 	private boolean checkForUpdates(boolean userInitiated) {
 		/* Unless the user is specifically asking to check
 		 * for updates, we only check for them if we have
-		 * a Wi-Fi connection, we're charging and/or have
-		 * juice aplenty, and the screen is off  
+		 * a connection matching the user's set preferences, 
+		 * we're charging and/or have juice aplenty, 
+		 * and the screen is off  
 		 */
 		
 		if (
@@ -607,9 +610,12 @@ implements
 				)
 			)
 		) {
+			Logger.i("Starting check for updates");
 			checkForUpdatesAsync(userInitiated);
 			return true;
-		}		
+		} else {
+			Logger.i("Ignoring request to check for updates");
+		}
 		return false;
 	}
 	
