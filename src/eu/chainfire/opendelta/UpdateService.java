@@ -29,6 +29,7 @@ import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -44,6 +45,7 @@ import eu.chainfire.opendelta.BatteryState.OnBatteryStateListener;
 import eu.chainfire.opendelta.NetworkState.OnNetworkStateListener;
 import eu.chainfire.opendelta.Scheduler.OnWantUpdateCheckListener;
 import eu.chainfire.opendelta.ScreenState.OnScreenStateListener;
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -157,6 +159,7 @@ implements
 	private String property_device;
 	private String filename_base;
 	private String path_base;
+	private String path_flash_after_update;
 	private String url_base_delta;
 	private String url_base_update;
 	private String url_base_full;
@@ -216,6 +219,7 @@ implements
 		property_device = getProperty(getString(R.string.property_device), "");
 		filename_base = String.format(Locale.ENGLISH, getString(R.string.filename_base), property_version);
 		path_base = String.format(Locale.ENGLISH, "%s%s%s%s", Environment.getExternalStorageDirectory().getAbsolutePath(), File.separator, getString(R.string.path_base), File.separator);
+		path_flash_after_update = String.format(Locale.ENGLISH, "%s%s%s", path_base, "FlashAfterUpdate", File.separator);
 		url_base_delta = String.format(Locale.ENGLISH, getString(R.string.url_base_delta), property_device);
 		url_base_update = String.format(Locale.ENGLISH, getString(R.string.url_base_update), property_device);
 		url_base_full = String.format(Locale.ENGLISH, getString(R.string.url_base_full), property_device);
@@ -225,6 +229,7 @@ implements
 		Logger.d("property_device: %s", property_device);
 		Logger.d("filename_base: %s", filename_base);		
 		Logger.d("path_base: %s", path_base);
+		Logger.d("path_flash_after_update: %s", path_flash_after_update);
 		Logger.d("url_base_delta: %s", url_base_delta);
 		Logger.d("url_base_update: %s", url_base_update);
 		Logger.d("url_base_full: %s", url_base_full);
@@ -901,10 +906,25 @@ implements
 		return filenameOut;
 	}
 	
+	@SuppressLint("SdCardPath")
 	private void flashUpdate() {
 		if (getPackageManager().checkPermission(PERMISSION_REBOOT, getPackageName()) != PackageManager.PERMISSION_GRANTED) {
 			Logger.d("[%s] required beyond this point", PERMISSION_REBOOT);
 			return;
+		}
+		
+		// Find additional ZIPs to flash
+		List<String> extras = new ArrayList<String>();
+		{
+			File[] files = (new File(path_flash_after_update)).listFiles();
+			if (files != null) {
+				for (File f : files) {
+					if (f.getName().toLowerCase(Locale.ENGLISH).endsWith(".zip")) {
+						extras.add(f.getAbsolutePath().replace(Environment.getExternalStorageDirectory().getAbsolutePath(), "/sdcard"));
+					}
+				}
+			}
+			Collections.sort(extras);
 		}
 		
 		try {
@@ -916,7 +936,11 @@ implements
 			if ((flashFilename != null) && (!flashFilename.equals(""))) {			
 				FileOutputStream os = new FileOutputStream("/cache/recovery/openrecoveryscript", false);
 				try {
-					os.write(("install " + flashFilename + "\nwipe cache\n").getBytes("US-ASCII"));
+					os.write(String.format("install %s\n", flashFilename).getBytes("UTF-8"));
+					for (String file : extras) {
+						os.write(String.format("install %s\n", file).getBytes("UTF-8"));
+					}
+					os.write(("wipe cache\n").getBytes("UTF-8"));
 				} finally {
 					os.close();
 				}
@@ -926,7 +950,11 @@ implements
 			if ((flashFilename != null) && (!flashFilename.equals(""))) {			
 				FileOutputStream os = new FileOutputStream("/cache/recovery/extendedcommand", false);
 				try {
-					os.write(("install_zip(\"" + flashFilename + "\");\nrun_program(\"/sbin/busybox\", \"rm\", \"-rf\", \"/cache/*\");\n").getBytes("US-ASCII"));
+					os.write(String.format("install_zip(\"%s\");\n", flashFilename).getBytes("UTF-8"));
+					for (String file : extras) {
+						os.write(String.format("install_zip(\"%s\");\n", file).getBytes("UTF-8"));
+					}
+					os.write(("run_program(\"/sbin/busybox\", \"rm\", \"-rf\", \"/cache/*\");\n").getBytes("UTF-8"));
 				} finally {
 					os.close();
 				}
@@ -965,6 +993,7 @@ implements
 					
 					String flashFilename = null;
 					try { (new File(path_base)).mkdir(); } catch(Exception e) { }
+					try { (new File(path_flash_after_update)).mkdir(); } catch(Exception e) { }
 					
 					// Create a list of deltas to apply to get from our current version to the latest
 					String fetch = String.format(Locale.ENGLISH, "%s%s.delta", url_base_delta, filename_base);
@@ -1086,8 +1115,11 @@ implements
 						
 						// Remove old file, or over time we could be filling up /cache
 						// if we don't actually flash every update
-						(new File(prefs.getString(PREF_READY_FILENAME_NAME, PREF_READY_FILENAME_DEFAULT))).delete();						
-						prefs.edit().putString(PREF_READY_FILENAME_NAME, null).commit();
+						String oldFilename = prefs.getString(PREF_READY_FILENAME_NAME, PREF_READY_FILENAME_DEFAULT);
+						if (oldFilename != null) {
+							(new File(oldFilename)).delete();						
+							prefs.edit().putString(PREF_READY_FILENAME_NAME, null).commit();
+						}
 						
 						// Put our resulting file in /cache
 						String cacheFilename = copyToCache(flashFilename);
