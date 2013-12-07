@@ -31,7 +31,6 @@
     <string name="state_action_applying">Parcheando &#8230;</string>
     <string name="state_action_applying_patch">Parcheando &#8230;</string>
     <string name="state_action_applying_md5">Verificando archivo &#8230;</string>
-    <string name="state_action_copying">Copiando archivo &#8230;</string>
     <string name="state_action_ready">Una actualización está disponible</string>
     <string name="state_error_disk_space">¡ No hay espacio suficiente en el disco !</string>
     <string name="state_error_unknown">Error desconocido</string>
@@ -46,5 +45,5 @@
     <string name="last_checked_filename" formatted="false">%s, última comprobación el %s a las %s</string>
 
     <string name="button_check_now">Comprobar ahora &#8230;</string>
-    <string name="button_flash_now">Flashear ahora &#8230;</string>
+    <string name="button_flash_now">Flashear ahora</string>
 </resources>

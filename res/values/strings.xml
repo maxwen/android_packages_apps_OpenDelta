@@ -33,7 +33,6 @@
 	<string name="state_action_applying">Patching &#8230;</string>	
 	<string name="state_action_applying_patch">Patching &#8230;</string>
 	<string name="state_action_applying_md5">Verifying file &#8230;</string>
-	<string name="state_action_copying">Copying file &#8230;</string>
 	<string name="state_action_ready">An update is available</string>
 	<string name="state_error_disk_space">Not enough disk space !</string>
 	<string name="state_error_unknown">Unknown error</string>

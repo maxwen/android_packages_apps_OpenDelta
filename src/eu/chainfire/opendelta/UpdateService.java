@@ -124,7 +124,6 @@ implements
 	public static final String STATE_ACTION_APPLYING = "action_applying";
 	public static final String STATE_ACTION_APPLYING_PATCH = "action_applying_patch";
 	public static final String STATE_ACTION_APPLYING_MD5 = "action_applying_md5";
-	public static final String STATE_ACTION_COPYING = "action_copying";
 	public static final String STATE_ACTION_READY = "action_ready";	
 	public static final String STATE_ERROR_DISK_SPACE = "error_disk_space";
 	public static final String STATE_ERROR_UNKNOWN = "error_unknown";
@@ -854,65 +853,25 @@ implements
 		return true;
 	}
 	
-	private String copyToCache(String filename) {
-		Logger.d("want to flash: %s", filename);
-
-		if (getPackageManager().checkPermission(PERMISSION_ACCESS_CACHE_FILESYSTEM, getPackageName()) != PackageManager.PERMISSION_GRANTED) {
-			Logger.d("[%s] required beyond this point", PERMISSION_ACCESS_CACHE_FILESYSTEM);
-			return null;
-		}
-		
-		updateState(STATE_ACTION_COPYING, null, null, null, null, null);
-		
-		(new File("/cache/recovery")).mkdir();
-		setPermissions("/cache/recovery", 0770, Process.myUid(), 2001 /*AID_CACHE*/);
-		
-		long start = SystemClock.elapsedRealtime();
-		
-		String display = (new File(filename)).getName();
-		String filenameOut = "/cache/recovery/" + display;
-		try {
-			FileInputStream is = new FileInputStream(filename);
-			try {				
-				FileOutputStream os = new FileOutputStream(filenameOut, false);
-				try {
-					byte[] buffer = new byte[256 * 1024];
-
-					long current = 0;
-					long total = (new File(filename)).length();
-					
-					int read;
-					while ((read = is.read(buffer)) >= 0) {
-						os.write(buffer, 0, read);
-						current += (long)read;
-						
-						updateState(STATE_ACTION_COPYING, ((float)current / (float)total) * 100f, current, total, display, SystemClock.elapsedRealtime() - start);
-					}
-					
-					updateState(STATE_ACTION_COPYING, 100f, current, total, display, SystemClock.elapsedRealtime() - start);
-				} finally {
-					os.close();
-				}
-			} finally {
-				is.close();
-			}
-			
-			setPermissions(filenameOut, 0640, Process.myUid(), 2001 /*AID_CACHE*/);
-		} catch (Exception e) {
-			(new File(filenameOut)).delete();
-			return null;
-		}
-		
-		return filenameOut;
-	}
-	
 	@SuppressLint("SdCardPath")
 	private void flashUpdate() {
+		if (getPackageManager().checkPermission(PERMISSION_ACCESS_CACHE_FILESYSTEM, getPackageName()) != PackageManager.PERMISSION_GRANTED) {
+			Logger.d("[%s] required beyond this point", PERMISSION_ACCESS_CACHE_FILESYSTEM);
+			return;
+		}
+
 		if (getPackageManager().checkPermission(PERMISSION_REBOOT, getPackageName()) != PackageManager.PERMISSION_GRANTED) {
 			Logger.d("[%s] required beyond this point", PERMISSION_REBOOT);
 			return;
 		}
-		
+
+		String flashFilename = prefs.getString(PREF_READY_FILENAME_NAME, PREF_READY_FILENAME_DEFAULT);
+		if ((flashFilename == null) || !flashFilename.startsWith(path_base)) return;
+					
+		// Remove the path to the storage from the filename, so we get a path relative to the root of the storage
+		String path_sd = Environment.getExternalStorageDirectory() + File.separator;
+		flashFilename = flashFilename.substring(path_sd.length());
+
 		// Find additional ZIPs to flash
 		List<String> extras = new ArrayList<String>();
 		{
@@ -920,19 +879,23 @@ implements
 			if (files != null) {
 				for (File f : files) {
 					if (f.getName().toLowerCase(Locale.ENGLISH).endsWith(".zip")) {
-						extras.add(f.getAbsolutePath().replace(Environment.getExternalStorageDirectory().getAbsolutePath(), "/sdcard"));
+						String filename = f.getAbsolutePath();
+						if (filename.startsWith(path_base)) {
+							extras.add(filename.substring(path_sd.length()));										
+						}
 					}
 				}
 			}
 			Collections.sort(extras);
-		}
-		
+		}					
+					
 		try {
-			String flashFilename = prefs.getString(PREF_READY_FILENAME_NAME, PREF_READY_FILENAME_DEFAULT);
-
 			// We're using TWRP's openrecoveryscript as primary, and CWM's extendedcommand as fallback
-			// Using AOSP's command would break older TWRPs. extendedcommand may break 'official' CWM though
-						
+			// Using AOSP's command would break older TWRPs. extendedcommand is broken on 'official' CWM
+			// builds, though.
+							
+			// TWRP - OpenRecoveryScript - the recovery will find the correct storage root for the ZIPs,
+			// life is nice and easy.
 			if ((flashFilename != null) && (!flashFilename.equals(""))) {			
 				FileOutputStream os = new FileOutputStream("/cache/recovery/openrecoveryscript", false);
 				try {
@@ -946,13 +909,21 @@ implements
 				}
 			}
 			setPermissions("/cache/recovery/openrecoveryscript", 0644, Process.myUid(), 2001 /*AID_CACHE*/);
-			
+						
+			// CWM - ExtendedCommand - provide paths to both internal and external storage locations,
+			// it's nigh impossible to know in practice which will be correct, not just because the internal
+			// storage location varies based on the external storage being present, but also because it's not 
+			// uncommon for community-built versions to have them reversed. It'll give some horrible looking
+			// results, but it seems to continue installing even if one ZIP fails and produce the wanted 
+			// result. Better than nothing ...
 			if ((flashFilename != null) && (!flashFilename.equals(""))) {			
 				FileOutputStream os = new FileOutputStream("/cache/recovery/extendedcommand", false);
 				try {
-					os.write(String.format("install_zip(\"%s\");\n", flashFilename).getBytes("UTF-8"));
+					os.write(String.format("install_zip(\"%s%s\");\n", "/sdcard/", flashFilename).getBytes("UTF-8"));
+					os.write(String.format("install_zip(\"%s%s\");\n", "/emmc/", flashFilename).getBytes("UTF-8"));
 					for (String file : extras) {
-						os.write(String.format("install_zip(\"%s\");\n", file).getBytes("UTF-8"));
+						os.write(String.format("install_zip(\"%s%s\");\n", "/sdcard/", file).getBytes("UTF-8"));
+						os.write(String.format("install_zip(\"%s%s\");\n", "/emmc/", file).getBytes("UTF-8"));
 					}
 					os.write(("run_program(\"/sbin/busybox\", \"rm\", \"-rf\", \"/cache/*\");\n").getBytes("UTF-8"));
 				} finally {
@@ -960,7 +931,7 @@ implements
 				}
 			}
 			setPermissions("/cache/recovery/extendedcommand", 0644, Process.myUid(), 2001 /*AID_CACHE*/);
-			
+						
 			((PowerManager)getSystemService(Context.POWER_SERVICE)).reboot("recovery");
 		} catch (Exception e) {
 		}
@@ -1108,27 +1079,7 @@ implements
 					}
 					
 					if (flashFilename != null) {
-						// Instead of deleting old and placing new, we could check for
-						// the file existing first, but to be sure its current, we'd
-						// have to MD5 it anyway, so best case we use a little less
-						// I/O, worst case a little more ...
-						
-						// Remove old file, or over time we could be filling up /cache
-						// if we don't actually flash every update
-						String oldFilename = prefs.getString(PREF_READY_FILENAME_NAME, PREF_READY_FILENAME_DEFAULT);
-						if (oldFilename != null) {
-							(new File(oldFilename)).delete();						
-							prefs.edit().putString(PREF_READY_FILENAME_NAME, null).commit();
-						}
-						
-						// Put our resulting file in /cache
-						String cacheFilename = copyToCache(flashFilename);
-						if (cacheFilename == null) {
-							updateState(STATE_ERROR_UNKNOWN, null, null, null, null, null);
-							Logger.d("error copying to cache");
-							return;									
-						}
-						prefs.edit().putString(PREF_READY_FILENAME_NAME, cacheFilename).commit();
+						prefs.edit().putString(PREF_READY_FILENAME_NAME, flashFilename).commit();
 					}	
 					
 					prefs.edit().putLong(PREF_LAST_CHECK_TIME_NAME, System.currentTimeMillis()).commit();
