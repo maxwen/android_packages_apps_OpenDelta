@@ -210,7 +210,7 @@ implements
 	public void onCreate() {
 		super.onCreate();
 		
-		Logger.setLogging(getResources().getBoolean(R.bool.debug_output));
+		Logger.setDebugLogging(getResources().getBoolean(R.bool.debug_output));
 
 		property_version = getProperty(getString(R.string.property_version), "");
 		property_device = getProperty(getString(R.string.property_device), "");
@@ -221,13 +221,13 @@ implements
 		url_base_full = String.format(Locale.ENGLISH, getString(R.string.url_base_full), property_device);
 		apply_signature = getResources().getBoolean(R.bool.apply_signature);
 
-		Logger.log("property_version: %s", property_version);
-		Logger.log("property_device: %s", property_device);
-		Logger.log("filename_base: %s", filename_base);		
-		Logger.log("path_base: %s", path_base);
-		Logger.log("url_base_delta: %s", url_base_delta);
-		Logger.log("url_base_update: %s", url_base_update);
-		Logger.log("url_base_full: %s", url_base_full);
+		Logger.d("property_version: %s", property_version);
+		Logger.d("property_device: %s", property_device);
+		Logger.d("filename_base: %s", filename_base);		
+		Logger.d("path_base: %s", path_base);
+		Logger.d("url_base_delta: %s", url_base_delta);
+		Logger.d("url_base_update: %s", url_base_update);
+		Logger.d("url_base_full: %s", url_base_full);
 		
 		wakeLock = ((PowerManager)getSystemService(POWER_SERVICE)).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "OpenDelta WakeLock");
 		wifiLock = ((WifiManager)getSystemService(WIFI_SERVICE)).createWifiLock(WifiManager.WIFI_MODE_FULL, "OpenDelta WifiLock");
@@ -296,23 +296,23 @@ implements
 	
 	@Override
 	public void onNetworkState(boolean state) {
-		Logger.log("network state --> %d", state ? 1 : 0);
+		Logger.d("network state --> %d", state ? 1 : 0);
 	}
 
 	@Override
 	public void onBatteryState(boolean state) {
-		Logger.log("battery state --> %d", state ? 1 : 0);
+		Logger.d("battery state --> %d", state ? 1 : 0);
 	}
 	
 	@Override
 	public void onScreenState(boolean state) {
-		Logger.log("screen state --> %d", state ? 1 : 0);
+		Logger.d("screen state --> %d", state ? 1 : 0);
 		scheduler.onScreenState(state);
 	}
 			
 	@Override
 	public boolean onWantUpdateCheck() {
-		Logger.log("Scheduler wants to check for updates");
+		Logger.d("Scheduler wants to check for updates");
 		return checkForUpdates(false);
 	}
 
@@ -368,7 +368,7 @@ implements
 	}	
 		
 	private byte[] downloadUrlMemory(String url) {
-		Logger.log("download: %s", url);
+		Logger.d("download: %s", url);
 		try {
 			HttpParams params = new BasicHttpParams();
 			HttpConnectionParams.setConnectionTimeout(params, 10000);
@@ -395,7 +395,7 @@ implements
 	}
 		
 	private boolean downloadUrlFile(String url, File f, String matchMD5, DeltaInfo.ProgressListener progressListener) {
-		Logger.log("download: %s", url);
+		Logger.d("download: %s", url);
 
 		MessageDigest digest = null;
 		if (matchMD5 != null) try { digest = MessageDigest.getInstance("MD5"); } catch (Exception e) { }
@@ -461,12 +461,12 @@ implements
 	private String findZIPOnSD(DeltaInfo.FileFull zip, File base) {
 		if (base == null) base = Environment.getExternalStorageDirectory();		
 		
-		Logger.log("scanning: %s", base.getAbsolutePath());
+		Logger.d("scanning: %s", base.getAbsolutePath());
 		File[] list = base.listFiles();
 		if (list != null) {
 			for (File f : list) {
 				if (!f.isDirectory() && f.getName().endsWith(".zip")) {
-					Logger.log("checking: %s", f.getAbsolutePath());
+					Logger.d("checking: %s", f.getAbsolutePath());
 					
 					boolean ok = (zip.match(f, true, getMD5Progress(STATE_ACTION_SEARCHING_MD5, f.getName())) != null);
 					updateState(STATE_ACTION_SEARCHING, null, null, null, null, null);
@@ -498,23 +498,23 @@ implements
 				String url = url_base + fileBase.getName();
 				String fn = path_base + fileBase.getName();
 				File f = new File(fn);
-				Logger.log("download: %s --> %s", url, fn);
+				Logger.d("download: %s --> %s", url, fn);
 				
 				if (downloadUrlFile(url, f, match.getMD5(), progressListener)) {
 					fileBase.setTag(fn);
-					Logger.log("success");
+					Logger.d("success");
 					return true;
 				} else {
 					f.delete();
-					Logger.log("download error");
+					Logger.d("download error");
 					return false;
 				}
 			} else {
-				Logger.log("aborting download due to network state");
+				Logger.d("aborting download due to network state");
 				return false;								
 			}
 		} else {
-			Logger.log("have %s already", fileBase.getName());
+			Logger.d("have %s already", fileBase.getName());
 			return true;
 		}
 	}
@@ -544,7 +544,7 @@ implements
 	}
 	
 	private boolean zipadjust(String filenameIn, String filenameOut, long start, long currentOut, long totalOut) {
-		Logger.log("zipadjust [%s] --> [%s]", filenameIn, filenameOut);
+		Logger.d("zipadjust [%s] --> [%s]", filenameIn, filenameOut);
 
 		// checking filesizes in the background as progress, because these
 		// native functions don't have callbacks (yet) to do this
@@ -559,13 +559,13 @@ implements
 		progress.interrupt();
 		try { progress.join(); } catch (Exception e) { }
 		
-		Logger.log("zipadjust --> %d", ok);
+		Logger.d("zipadjust --> %d", ok);
 		
 		return (ok == 1);
 	}
 	
 	private boolean dedelta(String filenameSource, String filenameDelta, String filenameOut, long start, long currentOut, long totalOut) {
-		Logger.log("dedelta [%s] --> [%s] --> [%s]", filenameSource, filenameDelta, filenameOut);
+		Logger.d("dedelta [%s] --> [%s] --> [%s]", filenameSource, filenameDelta, filenameOut);
 
 		// checking filesizes in the background as progress, because these
 		// native functions don't have callbacks (yet) to do this
@@ -580,7 +580,7 @@ implements
 		progress.interrupt();
 		try { progress.join(); } catch (Exception e) { }
 		
-		Logger.log("dedelta --> %d", ok);
+		Logger.d("dedelta --> %d", ok);
 		
 		return (ok == 1);
 	}
@@ -756,7 +756,7 @@ implements
 			filename[0] = lastDelta.getOut().getName();
 			if (!downloadDeltaFile(url_base_full, lastDelta.getOut(), lastDelta.getOut().getOfficial(), progressListener, force)) {
 				updateState(STATE_ERROR_UNKNOWN, null, null, null, null, null);
-				Logger.log("download error");
+				Logger.d("download error");
 				return false;
 			}
 		} else {
@@ -764,7 +764,7 @@ implements
 				filename[0] = di.getUpdate().getName();
 				if (!downloadDeltaFile(url_base_update, di.getUpdate(), di.getUpdate().getUpdate(), progressListener, force)) {
 					updateState(STATE_ERROR_UNKNOWN, null, null, null, null, null);
-					Logger.log("download error");
+					Logger.d("download error");
 					return false;
 				}
 				last[0] += di.getUpdate().getUpdate().getSize();
@@ -774,7 +774,7 @@ implements
 				filename[0] = lastDelta.getSignature().getName();
 				if (!downloadDeltaFile(url_base_update, lastDelta.getSignature(), lastDelta.getSignature().getUpdate(), progressListener, force)) {
 					updateState(STATE_ERROR_UNKNOWN, null, null, null, null, null);
-					Logger.log("download error");
+					Logger.d("download error");
 					return false;
 				}
 			}
@@ -804,7 +804,7 @@ implements
 			if (initialFileNeedsProcessing) {
 				if (!zipadjust(initialFile, tempFiles[tempFile], start, current, total)) {
 					updateState(STATE_ERROR_UNKNOWN, null, null, null, null, null);
-					Logger.log("zipadjust error");
+					Logger.d("zipadjust error");
 					return false;
 				}
 				tempFile = (tempFile + 1) % 2;
@@ -819,7 +819,7 @@ implements
 					
 				if (!dedelta(inFile, path_base + di.getUpdate().getName(), outFile, start, current, total)) {
 					updateState(STATE_ERROR_UNKNOWN, null, null, null, null, null);
-					Logger.log("dedelta error");
+					Logger.d("dedelta error");
 					return false;
 				}
 				tempFile = (tempFile + 1) % 2;
@@ -829,7 +829,7 @@ implements
 			if (apply_signature) {
 				if (!dedelta(tempFiles[(tempFile + 1) % 2], path_base + lastDelta.getSignature().getName(), path_base + lastDelta.getOut().getName(), start, current, total)) {
 					updateState(STATE_ERROR_UNKNOWN, null, null, null, null, null);
-					Logger.log("dedelta error");
+					Logger.d("dedelta error");
 					return false;
 				}
 				tempFile = (tempFile + 1) % 2;
@@ -844,10 +844,10 @@ implements
 	}
 	
 	private String copyToCache(String filename) {
-		Logger.log("want to flash: %s", filename);
+		Logger.d("want to flash: %s", filename);
 
 		if (getPackageManager().checkPermission(PERMISSION_ACCESS_CACHE_FILESYSTEM, getPackageName()) != PackageManager.PERMISSION_GRANTED) {
-			Logger.log("[%s] required beyond this point", PERMISSION_ACCESS_CACHE_FILESYSTEM);
+			Logger.d("[%s] required beyond this point", PERMISSION_ACCESS_CACHE_FILESYSTEM);
 			return null;
 		}
 		
@@ -897,7 +897,7 @@ implements
 	
 	private void flashUpdate() {
 		if (getPackageManager().checkPermission(PERMISSION_REBOOT, getPackageName()) != PackageManager.PERMISSION_GRANTED) {
-			Logger.log("[%s] required beyond this point", PERMISSION_REBOOT);
+			Logger.d("[%s] required beyond this point", PERMISSION_REBOOT);
 			return;
 		}
 		
@@ -980,7 +980,7 @@ implements
 							}
 						}
 						
-						Logger.log("delta --> [%s]", delta.getOut().getName());
+						Logger.d("delta --> [%s]", delta.getOut().getName());
 						fetch = String.format(Locale.ENGLISH, "%s%s.delta", url_base_delta, delta.getOut().getName().replace(".zip", ""));
 						deltas.add(delta);
 					}
@@ -993,7 +993,7 @@ implements
 							DeltaInfo di = deltas.get(i);
 							String fn = path_base + di.getOut().getName();
 							if (di.getOut().match(new File(fn), true, getMD5Progress(STATE_ACTION_CHECKING_MD5, di.getOut().getName())) != null) {
-								Logger.log("match found: %s", di.getOut().getName());
+								Logger.d("match found: %s", di.getOut().getName());
 								flashFilename = fn;
 								last = i;
 								break;
@@ -1018,7 +1018,7 @@ implements
 						long deltaDownloadSize = getDeltaDownloadSize(deltas);
 						long fullDownloadSize = getFullDownloadSize(deltas);						
 						
-						Logger.log("download size --> deltas[%d] vs full[%d]", deltaDownloadSize, fullDownloadSize);
+						Logger.d("download size --> deltas[%d] vs full[%d]", deltaDownloadSize, fullDownloadSize);
 
 						// Find the currently flashed ZIP, or a newer one
 						String initialFile = null;
@@ -1030,7 +1030,7 @@ implements
 						}
 						flashFilename = null;
 						
-						Logger.log("initial: %s", initialFile != null ? initialFile : "not found");
+						Logger.d("initial: %s", initialFile != null ? initialFile : "not found");
 						
 						// If we don't have a file to start out with, or the combined deltas get big, just get the latest full ZIP
 						boolean getFull = ((initialFile == null) || (deltaDownloadSize > fullDownloadSize));
@@ -1039,7 +1039,7 @@ implements
 						long freeSpace = (new StatFs(path_base)).getAvailableBytes();						
 						if (freeSpace < requiredSpace) {
 							updateState(STATE_ERROR_DISK_SPACE, null, freeSpace, requiredSpace, null, null);
-							Logger.log("not enough space!");
+							Logger.d("not enough space!");
 							return;
 						}
 						
@@ -1054,10 +1054,10 @@ implements
 						// Verify using MD5
 						if (lastDelta.getOut().match(new File(path_base + lastDelta.getOut().getName()), true, getMD5Progress(STATE_ACTION_APPLYING_MD5, lastDelta.getOut().getName())) == null) {
 							updateState(STATE_ERROR_UNKNOWN, null, null, null, null, null);
-							Logger.log("final verification error");
+							Logger.d("final verification error");
 							return;									
 						}
-						Logger.log("final verification complete");
+						Logger.d("final verification complete");
 							
 						// Cleanup
 						for (DeltaInfo di : deltas) {
@@ -1077,7 +1077,7 @@ implements
 						String cacheFilename = copyToCache(flashFilename);
 						if (cacheFilename == null) {
 							updateState(STATE_ERROR_UNKNOWN, null, null, null, null, null);
-							Logger.log("error copying to cache");
+							Logger.d("error copying to cache");
 							return;									
 						}
 						prefs.edit().putString(PREF_READY_FILENAME_NAME, cacheFilename).commit();

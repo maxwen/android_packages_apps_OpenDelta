@@ -143,7 +143,7 @@ implements
 	}
 	
 	public void alarm(int id) {
-		Logger.log("Alarm %d fired", id);
+		Logger.d("Alarm %d fired", id);
 		
 		switch (id) {		
 		case 1:

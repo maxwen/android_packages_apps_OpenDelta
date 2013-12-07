@@ -154,7 +154,7 @@ public class NetworkState {
 	
 	public void updateFlags(int newFlags) {
 		flags = newFlags;
-		Logger.log("networkstate flags --> %d", newFlags);
+		Logger.d("networkstate flags --> %d", newFlags);
 		if (connectivityManager != null) updateState();
 	}
 }
