@@ -60,6 +60,7 @@ public class MainActivity extends Activity {
 		try {
 			getActionBar().setIcon(getPackageManager().getApplicationIcon("com.android.settings"));
 		} catch (Exception e) {
+			Logger.ex(e);
 		}		
 		
 		getActionBar().setDisplayHomeAsUpEnabled(true);

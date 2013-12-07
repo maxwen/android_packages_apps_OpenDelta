@@ -169,7 +169,8 @@ public class DeltaInfo {
 			} finally {
 				is.close();
 			}
-		} catch (Exception e) {			
+		} catch (Exception e) {
+			Logger.ex(e);
 		}
 		
 		if (progressListener != null) progressListener.onProgress(getProgress(total, total), total, total);

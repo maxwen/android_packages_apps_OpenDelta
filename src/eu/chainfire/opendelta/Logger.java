@@ -11,6 +11,10 @@ public class Logger {
 		if (log) android.util.Log.d("OpenDelta", String.format(message, args));
 	}
 	
+	public static void ex(Exception e) {
+		if (log) e.printStackTrace();
+	}
+	
 	public static void i(String message, Object... args) {
 		android.util.Log.i("OpenDelta", String.format(message, args));		
 	}

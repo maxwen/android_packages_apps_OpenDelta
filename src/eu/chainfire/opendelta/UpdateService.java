@@ -188,6 +188,7 @@ implements
 			Method get = SystemProperties.getMethod("get", new Class[] { String.class, String.class });
 			return (String)get.invoke(null, new Object[] { key, defValue });
 		} catch (Exception e) {
+			Logger.ex(e);
 		}
 		return null;
 	}
@@ -198,7 +199,8 @@ implements
 			Class<?> FileUtils = getClassLoader().loadClass("android.os.FileUtils");
 			Method setPermissions = FileUtils.getDeclaredMethod("setPermissions", new Class[] { String.class, int.class, int.class, int.class });
 			return ((Integer)setPermissions.invoke(null, new Object[] { path, Integer.valueOf(mode), Integer.valueOf(uid), Integer.valueOf(gid) }) == 0);			
-		} catch (Exception e) {			
+		} catch (Exception e) {
+			Logger.ex(e);
 		}
 		return false;
 	}
@@ -396,6 +398,7 @@ implements
 			}
 			return null;
 		} catch (Exception e) {
+			Logger.ex(e);
 			return null;
 		}
 	}
@@ -443,6 +446,7 @@ implements
 			}
 			return false;
 		} catch (Exception e) {
+			Logger.ex(e);
 			return false;
 		}
 	}
@@ -934,6 +938,7 @@ implements
 						
 			((PowerManager)getSystemService(Context.POWER_SERVICE)).reboot("recovery");
 		} catch (Exception e) {
+			Logger.ex(e);
 		}
 	}
 
@@ -974,6 +979,7 @@ implements
 						try {
 							delta = new DeltaInfo(downloadUrlMemory(fetch), false);
 						} catch (Exception e) {
+							Logger.ex(e);
 						}
 
 						if (delta == null) {
