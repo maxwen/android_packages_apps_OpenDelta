@@ -1079,6 +1079,16 @@ implements
 					}
 					
 					if (flashFilename != null) {
+						// Instead of deleting old and placing new, we could check for
+						// the file existing first, but to be sure its current, we'd
+						// have to MD5 it anyway, so best case we use a little less
+						// I/O, worst case a little more ...
+						
+						// Remove old file, or over time we could be filling up /cache
+						// if we don't actually flash every update
+						(new File(prefs.getString(PREF_READY_FILENAME_NAME, PREF_READY_FILENAME_DEFAULT))).delete();						
+						prefs.edit().putString(PREF_READY_FILENAME_NAME, null).commit();
+						
 						// Put our resulting file in /cache
 						String cacheFilename = copyToCache(flashFilename);
 						if (cacheFilename == null) {
