@@ -42,7 +42,6 @@
 
     <string name="last_checked" formatted="false">Última comprobación el %s a las %s</string>
     <string name="last_checked_never">Nunca se ha comprobado, ¿ Tal vez le gustaría hacerlo ?</string>
-    <string name="last_checked_filename" formatted="false">%s, última comprobación el %s a las %s</string>
 
     <string name="button_check_now">Comprobar ahora &#8230;</string>
     <string name="button_flash_now">Flashear ahora</string>
