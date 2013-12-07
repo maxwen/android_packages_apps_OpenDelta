@@ -1065,7 +1065,9 @@ implements
 							(new File(path_base + di.getSignature().getName())).delete();
 							if (di != lastDelta) (new File(path_base + di.getOut().getName())).delete();
 						}
-						if (initialFile.startsWith(path_base)) (new File(initialFile)).delete();
+						if (initialFile != null) {
+							if (initialFile.startsWith(path_base)) (new File(initialFile)).delete();
+						}
 						
 						flashFilename = path_base + lastDelta.getOut().getName();
 					}
