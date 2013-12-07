@@ -870,6 +870,7 @@ implements
 		}
 
 		String flashFilename = prefs.getString(PREF_READY_FILENAME_NAME, PREF_READY_FILENAME_DEFAULT);
+		prefs.edit().putString(PREF_READY_FILENAME_NAME, PREF_READY_FILENAME_DEFAULT).commit();
 		if ((flashFilename == null) || !flashFilename.startsWith(path_base)) return;
 					
 		// Remove the path to the storage from the filename, so we get a path relative to the root of the storage
