@@ -26,9 +26,12 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 
 public class DeltaInfo {
@@ -159,9 +162,14 @@ public class DeltaInfo {
     private final boolean revoked;
 
     public DeltaInfo(byte[] raw, boolean revoked) throws JSONException,
-            UnsupportedEncodingException, NullPointerException {
-        JSONObject object = new JSONObject(new String(raw, "UTF-8"));
-
+            NullPointerException {        
+        JSONObject object = null;
+        try {
+            object = new JSONObject(new String(raw, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            // Doesn't happen, UTF-8 is guaranteed to be available on Android
+        }
+        
         version = object.getInt("version");
         in = new FileFull(object.getJSONObject("in"));
         update = new FileUpdate(object.getJSONObject("update"));
@@ -230,7 +238,14 @@ public class DeltaInfo {
             } finally {
                 is.close();
             }
-        } catch (Exception e) {
+        } catch (NoSuchAlgorithmException e) {
+            // No MD5 support (returns null)
+            Logger.ex(e);
+        } catch (FileNotFoundException e) {
+            // The MD5 of a non-existing file is null
+            Logger.ex(e);
+        } catch (IOException e) {
+            // Read or close error (returns null)
             Logger.ex(e);
         }
 

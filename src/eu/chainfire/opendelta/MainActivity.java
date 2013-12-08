@@ -31,6 +31,7 @@ import android.content.DialogInterface.OnMultiChoiceClickListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Html;
@@ -59,7 +60,8 @@ public class MainActivity extends Activity {
 
         try {
             getActionBar().setIcon(getPackageManager().getApplicationIcon("com.android.settings"));
-        } catch (Exception e) {
+        } catch (NameNotFoundException e) {
+            // The standard Settings package is not present, so we can't snatch its icon
             Logger.ex(e);
         }
 
@@ -213,12 +215,15 @@ public class MainActivity extends Activity {
 
             String state = intent.getStringExtra(UpdateService.EXTRA_STATE);
             // don't try this at home
-            if (state != null)
+            if (state != null) {
                 try {
                     title = getString(getResources().getIdentifier(
                             "state_" + state, "string", getPackageName()));
                 } catch (Exception e) {
+                    // String for this state could not be found (displays empty string)
+                    Logger.ex(e);                    
                 }
+            }
 
             if (UpdateService.STATE_ERROR_DISK_SPACE.equals(state)) {
                 current = intent.getLongExtra(UpdateService.EXTRA_CURRENT, current);

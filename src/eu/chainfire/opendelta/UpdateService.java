@@ -54,6 +54,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.json.JSONException;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -61,6 +62,7 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -193,6 +195,7 @@ public class
                     key, defValue
             });
         } catch (Exception e) {
+            // A lot of voodoo could go wrong here, return failure instead of crash
             Logger.ex(e);
         }
         return null;
@@ -212,6 +215,7 @@ public class
                     path, Integer.valueOf(mode), Integer.valueOf(uid), Integer.valueOf(gid)
             }) == 0);
         } catch (Exception e) {
+            // A lot of voodoo could go wrong here, return failure instead of crash
             Logger.ex(e);
         }
         return false;
@@ -431,6 +435,8 @@ public class
             }
             return null;
         } catch (Exception e) {
+            // Download failed for any number of reasons, timeouts, connection
+            // drops, etc. Just log it in debugging mode.
             Logger.ex(e);
             return null;
         }
@@ -441,11 +447,14 @@ public class
         Logger.d("download: %s", url);
 
         MessageDigest digest = null;
-        if (matchMD5 != null)
+        if (matchMD5 != null) {
             try {
                 digest = MessageDigest.getInstance("MD5");
-            } catch (Exception e) {
+            } catch (NoSuchAlgorithmException e) {
+                // No MD5 algorithm support
+                Logger.ex(e);
             }
+        }
 
         if (f.exists())
             f.delete();
@@ -490,6 +499,8 @@ public class
             }
             return false;
         } catch (Exception e) {
+            // Download failed for any number of reasons, timeouts, connection
+            // drops, etc. Just log it in debugging mode.
             Logger.ex(e);
             return false;
         }
@@ -602,6 +613,7 @@ public class
 
                         Thread.sleep(16);
                     } catch (InterruptedException e) {
+                        // We're being told to quit
                         break;
                     }
                 }
@@ -627,7 +639,9 @@ public class
         progress.interrupt();
         try {
             progress.join();
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
+            // We got interrupted in a very short wait, surprising, but not a problem. 'progress' will quit by itself.
+            Logger.ex(e);
         }
 
         Logger.d("zipadjust --> %d", ok);
@@ -653,7 +667,9 @@ public class
         progress.interrupt();
         try {
             progress.join();
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
+            // We got interrupted in a very short wait, surprising, but not a problem. 'progress' will quit by itself.
+            Logger.ex(e);
         }
 
         Logger.d("dedelta --> %d", ok);
@@ -1051,6 +1067,8 @@ public class
 
             ((PowerManager) getSystemService(Context.POWER_SERVICE)).reboot("recovery");
         } catch (Exception e) {
+            // We have failed to write something. There's not really anything else to do at 
+            // at this stage than give up. No reason to crash though.
             Logger.ex(e);
         }
     }
@@ -1081,14 +1099,8 @@ public class
                     List<DeltaInfo> deltas = new ArrayList<DeltaInfo>();
 
                     String flashFilename = null;
-                    try {
-                        (new File(path_base)).mkdir();
-                    } catch (Exception e) {
-                    }
-                    try {
-                        (new File(path_flash_after_update)).mkdir();
-                    } catch (Exception e) {
-                    }
+                    (new File(path_base)).mkdir();
+                    (new File(path_flash_after_update)).mkdir();
 
                     // Create a list of deltas to apply to get from our current
                     // version to the latest
@@ -1099,21 +1111,32 @@ public class
 
                         try {
                             delta = new DeltaInfo(downloadUrlMemory(fetch), false);
-                        } catch (Exception e) {
+                        } catch (JSONException e) {
+                            // There's an error in the JSON. Could be bad JSON, could be a 404 text, etc
+                            Logger.ex(e);
+                        } catch (NullPointerException e) {
+                            // Download failed
                             Logger.ex(e);
                         }
 
                         if (delta == null) {
-                            // see if we have a revoked version instead, we
+                            // See if we have a revoked version instead, we
                             // still need it for chaining future deltas, but
                             // will not allow flashing this one
                             try {
                                 delta = new DeltaInfo(downloadUrlMemory(fetch.replace(".delta",
                                         ".delta_revoked")), true);
-                            } catch (Exception e) {
-                                // neither a delta nor a revoked delta was found
-                                break;
+                            } catch (JSONException e) {
+                                // There's an error in the JSON. Could be bad JSON, could be a 404 text, etc
+                                Logger.ex(e);
+                            } catch (NullPointerException e) {
+                                // Download failed
+                                Logger.ex(e);
                             }
+                            
+                            // We didn't get a delta or a delta_revoked - end of the delta availability chain
+                            if (delta == null)
+                                break;
                         }
 
                         Logger.d("delta --> [%s]", delta.getOut().getName());
