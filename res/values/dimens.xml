@@ -4,5 +4,5 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
 
     <!-- Size of our large text -->
-	<dimen name="TextLarger">22sp</dimen>   
+    <dimen name="TextLarger">22sp</dimen>   
 </resources>

@@ -1,4 +1,4 @@
 <resources>
     <!-- Size of our large text -->
-	<dimen name="TextLarger">28sp</dimen>
+    <dimen name="TextLarger">28sp</dimen>
 </resources>

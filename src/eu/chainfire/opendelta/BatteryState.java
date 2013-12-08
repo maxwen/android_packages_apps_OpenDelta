@@ -28,69 +28,71 @@ import android.content.IntentFilter;
 import android.os.BatteryManager;
 
 public class BatteryState {
-	public interface OnBatteryStateListener {
-		public void onBatteryState(boolean state);
-	}
-	
-	private Context context = null;
-	private OnBatteryStateListener onBatteryStateListener = null; 
-	private volatile Boolean stateLast = null;
+    public interface OnBatteryStateListener {
+        public void onBatteryState(boolean state);
+    }
 
-	private int minLevel = 50;
-	private boolean chargeOnly = true;
-	
-	private IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-	private BroadcastReceiver receiver = new BroadcastReceiver() {		
-		@Override
-		public void onReceive(Context context, Intent intent) {		
-			int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-			int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-			updateState(
-				level,
-				(status == BatteryManager.BATTERY_STATUS_CHARGING) ||
-			    (status == BatteryManager.BATTERY_STATUS_FULL)
-			);			
-		}
-	};
+    private Context context = null;
+    private OnBatteryStateListener onBatteryStateListener = null;
+    private volatile Boolean stateLast = null;
 
-	private void updateState(int level, boolean charging) {
-		if (onBatteryStateListener != null) {
-			boolean state = (
-				(charging && chargeOnly) ||
-				((level >= minLevel) && (!chargeOnly))
-			);
-			
-			if ((stateLast == null) || (stateLast != state)) {
-				stateLast = state;
-				onBatteryStateListener.onBatteryState(state);
-			}
-		}		
-	}		
-		
-	public boolean start(Context context, OnBatteryStateListener onBatteryStateListener, int minLevel, boolean chargeOnly) {
-		if (this.context == null) {
-			this.context = context;
-			this.onBatteryStateListener = onBatteryStateListener;
-			this.minLevel = minLevel;
-			this.chargeOnly = chargeOnly;
-			context.registerReceiver(receiver, filter);
-			return true;
-		}
-		return false;
-	}
-	
-	public boolean stop() {
-		if (context != null) {
-			context.unregisterReceiver(receiver);
-			onBatteryStateListener = null;
-			context = null;
-			return true;
-		}		
-		return false;
-	}
+    private int minLevel = 50;
+    private boolean chargeOnly = true;
 
-	public Boolean getState() {
-		if (stateLast == null) return false;
-		return stateLast.booleanValue();
-	}
+    private IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            updateState(
+                    level,
+                    (status == BatteryManager.BATTERY_STATUS_CHARGING) ||
+                            (status == BatteryManager.BATTERY_STATUS_FULL)
+            );
+        }
+    };
+
+    private void updateState(int level, boolean charging) {
+        if (onBatteryStateListener != null) {
+            boolean state = (
+                    (charging && chargeOnly) ||
+                    ((level >= minLevel) && (!chargeOnly))
+            );
+
+            if ((stateLast == null) || (stateLast != state)) {
+                stateLast = state;
+                onBatteryStateListener.onBatteryState(state);
+            }
+        }
+    }
+
+    public boolean start(Context context, OnBatteryStateListener onBatteryStateListener,
+            int minLevel, boolean chargeOnly) {
+        if (this.context == null) {
+            this.context = context;
+            this.onBatteryStateListener = onBatteryStateListener;
+            this.minLevel = minLevel;
+            this.chargeOnly = chargeOnly;
+            context.registerReceiver(receiver, filter);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean stop() {
+        if (context != null) {
+            context.unregisterReceiver(receiver);
+            onBatteryStateListener = null;
+            context = null;
+            return true;
+        }
+        return false;
+    }
+
+    public Boolean getState() {
+        if (stateLast == null)
+            return false;
+        return stateLast.booleanValue();
+    }
 }

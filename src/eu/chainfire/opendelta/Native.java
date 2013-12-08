@@ -22,10 +22,11 @@
 package eu.chainfire.opendelta;
 
 public class Native {
-	public static native int zipadjust(String filenameIn, String filenameOut, int decompress);
-	public static native int dedelta(String filenameSource, String filenameDelta, String filenameOut);
+    public static native int zipadjust(String filenameIn, String filenameOut, int decompress);
 
-	static {
-		System.loadLibrary("opendelta");
-	}
+    public static native int dedelta(String filenameSource, String filenameDelta, String filenameOut);
+
+    static {
+        System.loadLibrary("opendelta");
+    }
 }

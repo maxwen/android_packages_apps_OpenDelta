@@ -28,69 +28,73 @@ import android.content.IntentFilter;
 import android.os.PowerManager;
 
 public class ScreenState {
-	public interface OnScreenStateListener {
-		public void onScreenState(boolean state);
-	}
-	
-	private Context context = null;
-	private OnScreenStateListener onScreenStateListener = null; 
-	private volatile Boolean stateLast = null;
+    public interface OnScreenStateListener {
+        public void onScreenState(boolean state);
+    }
 
-	private IntentFilter filter = null;
-	private BroadcastReceiver receiver = new BroadcastReceiver() {		
-		@Override
-		public void onReceive(Context context, Intent intent) {		
-			updateState(intent);
-		}
-	};
-	
-	public ScreenState() {
-		filter = new IntentFilter();
-		filter.addAction(Intent.ACTION_SCREEN_ON);
-		filter.addAction(Intent.ACTION_SCREEN_OFF);
-	}
+    private Context context = null;
+    private OnScreenStateListener onScreenStateListener = null;
+    private volatile Boolean stateLast = null;
 
-	private void updateState(Intent intent) {
-		if (onScreenStateListener != null) {
-			Boolean state = null;
-			if (intent != null) {
-				if (Intent.ACTION_SCREEN_ON.equals(intent.getAction())) state = true;
-				if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) state = false;
-			}
-			if (state == null) {
-				state = ((PowerManager)context.getSystemService(Context.POWER_SERVICE)).isScreenOn();
-			}
+    private IntentFilter filter = null;
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            updateState(intent);
+        }
+    };
 
-			if ((stateLast == null) || (stateLast != state)) {
-				stateLast = state;
-				onScreenStateListener.onScreenState(state);
-			}
-		}		
-	}		
-		
-	public boolean start(Context context, OnScreenStateListener onScreenStateListener) {
-		if (this.context == null) {
-			this.context = context;
-			this.onScreenStateListener = onScreenStateListener;
-			context.registerReceiver(receiver, filter);
-			updateState(null);
-			return true;
-		}
-		return false;
-	}
-	
-	public boolean stop() {
-		if (context != null) {
-			context.unregisterReceiver(receiver);
-			onScreenStateListener = null;
-			context = null;
-			return true;
-		}		
-		return false;
-	}
-	
-	public Boolean getState() {
-		if (stateLast == null) return false;
-		return stateLast.booleanValue();
-	}
+    public ScreenState() {
+        filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+    }
+
+    private void updateState(Intent intent) {
+        if (onScreenStateListener != null) {
+            Boolean state = null;
+            if (intent != null) {
+                if (Intent.ACTION_SCREEN_ON.equals(intent.getAction()))
+                    state = true;
+                if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction()))
+                    state = false;
+            }
+            if (state == null) {
+                state = ((PowerManager) context.getSystemService(Context.POWER_SERVICE))
+                        .isScreenOn();
+            }
+
+            if ((stateLast == null) || (stateLast != state)) {
+                stateLast = state;
+                onScreenStateListener.onScreenState(state);
+            }
+        }
+    }
+
+    public boolean start(Context context, OnScreenStateListener onScreenStateListener) {
+        if (this.context == null) {
+            this.context = context;
+            this.onScreenStateListener = onScreenStateListener;
+            context.registerReceiver(receiver, filter);
+            updateState(null);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean stop() {
+        if (context != null) {
+            context.unregisterReceiver(receiver);
+            onScreenStateListener = null;
+            context = null;
+            return true;
+        }
+        return false;
+    }
+
+    public Boolean getState() {
+        if (stateLast == null)
+            return false;
+        return stateLast.booleanValue();
+    }
 }
