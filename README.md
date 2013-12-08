@@ -82,7 +82,7 @@ download the full-size compressed OTA ZIP instead.
 Server-side
 -----------
 
-The create the delta files on the server, you need several things, some of 
+To create the delta files on the server, you need several things, some of 
 which can be found in the *server* directory. The main thing is the 
 *opendelta.sh* script. It contains a configuration section which you can edit 
 with the correct file locations on your own system. Quite likely you will need
@@ -121,7 +121,7 @@ You may need to enable the app to show up in the launcher ("System Updates")
 by editing *AndroidManifest*.
 
 The APK needs privileged system permissions, and thus needs to placed in
-*/system/priv-app*. If you're testing on a build that includes **OpenDelta*
+*/system/priv-app*. If you're testing on a build that includes **OpenDelta**
 already, remove it from that location and reboot before continuing. If you
 install the APK through Eclipse it'll end up in */data/app*, but will not be
 granted the right permissions. Move that APK to */system/priv-app* and reboot.
