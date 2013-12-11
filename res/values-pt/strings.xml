@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OpenDelta</string>
+    <string name="title">Atualizações do Sistema</string>
+
+    <string name="action_networks">Redes</string>
+    <string name="title_networks">Atualizar utilizando as redes</string>
+    <string name="network_2g">2G</string>
+    <string name="network_3g">3G</string>
+    <string name="network_4g">4G</string>
+    <string name="network_wifi">Wi-Fi</string>
+    <string name="network_ethernet">Ethernet</string>
+    <string name="network_unknown">Outras</string>
+
+    <string name="action_about">Sobre</string>
+
+    <string name="about_content"><![CDATA[
+        Copyright &copy; _COPYRIGHT_OPENDELTA_ <b>Jorrit \'Chainfire\' Jongma</b><br>
+        <br>
+        Originalmente criado para <b>The OmniROM Project</b><br>
+        <br>
+        Licenciado sobre os termos do <b>GNU General Public License, versão 3.0 (GPLv3)</b><br>
+        <br>
+        Delta decoding baseado no <b>xdelta</b>, copyright &copy; _COPYRIGHT_XDELTA_ <b>Joshua MacDonald</b><br>
+    ]]></string>
+
+    <string name="state_action_none">Seu sistema está atualizado</string>
+    <string name="state_action_checking">Procurando por atualizações &#8230;</string>
+    <string name="state_action_checking_md5">Verificando arquivo &#8230;</string>
+    <string name="state_action_searching">Procurando por arquivos &#8230;</string>
+    <string name="state_action_searching_md5">Verificando arquivo &#8230;</string>
+    <string name="state_action_downloading">Baixando &#8230;</string>
+    <string name="state_action_applying">Aplicando Patches &#8230;</string>
+    <string name="state_action_applying_patch">Patching &#8230;</string>
+    <string name="state_action_applying_md5">Verificando arquivo &#8230;</string>
+    <string name="state_action_ready">Uma atualização está disponível</string>
+    <string name="state_error_disk_space">Espaço em disco insuficiente !</string>
+    <string name="state_error_unknown">Erro desconhecido</string>
+
+    <string name="error_disk_space_sub" formatted="false">%d MiB disponível, %d MiB necessário</string>
+
+    <string name="notify_update_available">Uma atualização está disponível</string>
+    <string name="notify_checking">Procurando por atualizações &#8230;</string>
+
+    <string name="last_checked" formatted="false">Última atualização em %s às %s</string>
+    <string name="last_checked_never">Nunca verificado, talvez você gostaria de fazer?</string>
+
+    <string name="button_check_now">Verificar agora &#8230;</string>
+    <string name="button_flash_now">Aplicar atualizações</string>
+</resources>
