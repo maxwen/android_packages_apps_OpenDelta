@@ -23,15 +23,15 @@
         Delta decoding based on <b>xdelta</b>, copyright &copy; _COPYRIGHT_XDELTA_ <b>Joshua MacDonald</b><br>
     ]]></string>
 
-    <string name="state_action_none">Il Sistema e\' aggiornato</string>
-    <string name="state_action_checking">Controllo aggiornamenti &#8230;</string>
-    <string name="state_action_checking_md5">Verifica file &#8230;</string>
-    <string name="state_action_searching">Ricerca file &#8230;</string>
-    <string name="state_action_searching_md5">Verifica file &#8230;</string>
-    <string name="state_action_downloading">In download &#8230;</string>
-    <string name="state_action_applying">Aggiornamento &#8230;</string>
-    <string name="state_action_applying_patch">Aggiornamento &#8230;</string>
-    <string name="state_action_applying_md5">Verifica file &#8230;</string>
+    <string name="state_action_none">Il Sistema è aggiornato</string>
+    <string name="state_action_checking">Controllo aggiornamenti&#8230;</string>
+    <string name="state_action_checking_md5">Verifica file&#8230;</string>
+    <string name="state_action_searching">Ricerca file&#8230;</string>
+    <string name="state_action_searching_md5">Verifica file&#8230;</string>
+    <string name="state_action_downloading">In download&#8230;</string>
+    <string name="state_action_applying">Aggiornamento&#8230;</string>
+    <string name="state_action_applying_patch">Aggiornamento&#8230;</string>
+    <string name="state_action_applying_md5">Verifica file&#8230;</string>
     <string name="state_action_ready">Aggiornamento disponibile</string>
     <string name="state_error_disk_space">Spazio disco insufficiente!</string>
     <string name="state_error_unknown">Errore sconosciuto</string>
@@ -39,11 +39,11 @@
     <string name="error_disk_space_sub" formatted="false">%d MiB disponibili, %d MiB richiesti</string>
 
     <string name="notify_update_available">Aggiornamento disponibile</string>
-    <string name="notify_checking">Controllo aggiornamenti &#8230;</string>
+    <string name="notify_checking">Controllo aggiornamenti&#8230;</string>
 
     <string name="last_checked" formatted="false">Ultimo controllo il %s alle %s</string>
     <string name="last_checked_never">Non abbiamo mai controllato, magari vorresti farlo?</string>
 
-    <string name="button_check_now">Controlla ora &#8230;</string>
+    <string name="button_check_now">Controlla ora&#8230;</string>
     <string name="button_flash_now">Installa ora</string>
 </resources>
