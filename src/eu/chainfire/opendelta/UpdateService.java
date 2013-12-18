@@ -68,8 +68,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-public class 
-        UpdateService
+public class UpdateService
         extends
         Service
         implements
@@ -154,15 +153,7 @@ public class
                 state.equals(STATE_ERROR_UNKNOWN) || state.equals(STATE_ERROR_DISK_SPACE));
     }
 
-    private String property_version;
-    private String property_device;
-    private String filename_base;
-    private String path_base;
-    private String path_flash_after_update;
-    private String url_base_delta;
-    private String url_base_update;
-    private String url_base_full;
-    private boolean apply_signature;
+    private Config config;
 
     private HandlerThread handlerThread;
     private Handler handler;
@@ -185,26 +176,6 @@ public class
      * Using reflection voodoo instead calling the hidden class directly, to
      * dev/test outside of AOSP tree
      */
-    private String getProperty(String key, String defValue) {
-        try {
-            Class<?> SystemProperties = getClassLoader().loadClass("android.os.SystemProperties");
-            Method get = SystemProperties.getMethod("get", new Class[] {
-                    String.class, String.class
-            });
-            return (String) get.invoke(null, new Object[] {
-                    key, defValue
-            });
-        } catch (Exception e) {
-            // A lot of voodoo could go wrong here, return failure instead of crash
-            Logger.ex(e);
-        }
-        return null;
-    }
-
-    /*
-     * Using reflection voodoo instead calling the hidden class directly, to
-     * dev/test outside of AOSP tree
-     */
     private boolean setPermissions(String path, int mode, int uid, int gid) {
         try {
             Class<?> FileUtils = getClassLoader().loadClass("android.os.FileUtils");
@@ -215,7 +186,8 @@ public class
                     path, Integer.valueOf(mode), Integer.valueOf(uid), Integer.valueOf(gid)
             }) == 0);
         } catch (Exception e) {
-            // A lot of voodoo could go wrong here, return failure instead of crash
+            // A lot of voodoo could go wrong here, return failure instead of
+            // crash
             Logger.ex(e);
         }
         return false;
@@ -232,31 +204,7 @@ public class
 
         Logger.setDebugLogging(getResources().getBoolean(R.bool.debug_output));
 
-        property_version = getProperty(getString(R.string.property_version), "");
-        property_device = getProperty(getString(R.string.property_device), "");
-        filename_base = String.format(Locale.ENGLISH, getString(R.string.filename_base),
-                property_version);
-        path_base = String.format(Locale.ENGLISH, "%s%s%s%s", Environment
-                .getExternalStorageDirectory().getAbsolutePath(), File.separator,
-                getString(R.string.path_base), File.separator);
-        path_flash_after_update = String.format(Locale.ENGLISH, "%s%s%s", path_base,
-                "FlashAfterUpdate", File.separator);
-        url_base_delta = String.format(Locale.ENGLISH, getString(R.string.url_base_delta),
-                property_device);
-        url_base_update = String.format(Locale.ENGLISH, getString(R.string.url_base_update),
-                property_device);
-        url_base_full = String.format(Locale.ENGLISH, getString(R.string.url_base_full),
-                property_device);
-        apply_signature = getResources().getBoolean(R.bool.apply_signature);
-
-        Logger.d("property_version: %s", property_version);
-        Logger.d("property_device: %s", property_device);
-        Logger.d("filename_base: %s", filename_base);
-        Logger.d("path_base: %s", path_base);
-        Logger.d("path_flash_after_update: %s", path_flash_after_update);
-        Logger.d("url_base_delta: %s", url_base_delta);
-        Logger.d("url_base_update: %s", url_base_update);
-        Logger.d("url_base_full: %s", url_base_full);
+        config = Config.getInstance(this);
 
         wakeLock = ((PowerManager) getSystemService(POWER_SERVICE)).newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK, "OpenDelta WakeLock");
@@ -570,7 +518,7 @@ public class
         if (fileBase.getTag() == null) {
             if (force || networkState.getState()) {
                 String url = url_base + fileBase.getName();
-                String fn = path_base + fileBase.getName();
+                String fn = config.getPathBase() + fileBase.getName();
                 File f = new File(fn);
                 Logger.d("download: %s --> %s", url, fn);
 
@@ -640,7 +588,8 @@ public class
         try {
             progress.join();
         } catch (InterruptedException e) {
-            // We got interrupted in a very short wait, surprising, but not a problem. 'progress' will quit by itself.
+            // We got interrupted in a very short wait, surprising, but not a
+            // problem. 'progress' will quit by itself.
             Logger.ex(e);
         }
 
@@ -668,7 +617,8 @@ public class
         try {
             progress.join();
         } catch (InterruptedException e) {
-            // We got interrupted in a very short wait, surprising, but not a problem. 'progress' will quit by itself.
+            // We got interrupted in a very short wait, surprising, but not a
+            // problem. 'progress' will quit by itself.
             Logger.ex(e);
         }
 
@@ -711,7 +661,7 @@ public class
 
         long deltaDownloadSize = 0L;
         for (DeltaInfo di : deltas) {
-            String fn = path_base + di.getUpdate().getName();
+            String fn = config.getPathBase() + di.getUpdate().getName();
             if (di.getUpdate().match(new File(fn), true,
                     getMD5Progress(STATE_ACTION_CHECKING_MD5, di.getUpdate().getName())) == di
                     .getUpdate().getUpdate()) {
@@ -723,8 +673,8 @@ public class
 
         DeltaInfo lastDelta = deltas.get(deltas.size() - 1);
         {
-            if (apply_signature) {
-                String fn = path_base + lastDelta.getSignature().getName();
+            if (config.getApplySignature()) {
+                String fn = config.getPathBase() + lastDelta.getSignature().getName();
                 if (lastDelta.getSignature().match(
                         new File(fn),
                         true,
@@ -747,7 +697,7 @@ public class
 
         long fullDownloadSize = 0;
         {
-            String fn = path_base + lastDelta.getOut().getName();
+            String fn = config.getPathBase() + lastDelta.getOut().getName();
             if (lastDelta.getOut().match(new File(fn), true,
                     getMD5Progress(STATE_ACTION_CHECKING_MD5, lastDelta.getOut().getName())) == lastDelta
                     .getOut().getOfficial()) {
@@ -775,7 +725,7 @@ public class
                 if (di.getUpdate().getTag() == null)
                     requiredSpace += sizeOnDisk(di.getUpdate().getUpdate().getSize());
             }
-            if (apply_signature) {
+            if (config.getApplySignature()) {
                 requiredSpace += sizeOnDisk(lastDelta.getSignature().getUpdate().getSize());
             }
 
@@ -800,7 +750,7 @@ public class
         String initialFile = null;
 
         // Check if an original flashable ZIP is in our preferred location
-        String expectedLocation = path_base + firstDelta.getIn().getName();
+        String expectedLocation = config.getPathBase() + firstDelta.getIn().getName();
         DeltaInfo.FileSizeMD5 match = null;
         if (expectedLocation.equals(possibleMatch)) {
             match = firstDelta.getIn().match(new File(expectedLocation), false, null);
@@ -820,7 +770,7 @@ public class
 
         // If the user flashed manually, the file is probably not in our
         // preferred location (assuming it wasn't sideloaded), so search
-        // the (internal) storage for it. Should at some point be 
+        // the (internal) storage for it. Should at some point be
         // extended to search (true) external storage as well.
         if (initialFile == null) {
             initialFile = findZIPOnSD(firstDelta.getIn(), null);
@@ -843,7 +793,7 @@ public class
         DeltaInfo lastDelta = deltas.get(deltas.size() - 1);
 
         final String[] filename = new String[] {
-            null
+                null
         };
         updateState(STATE_ACTION_DOWNLOADING, 0f, 0L, totalDownloadSize, null, null);
 
@@ -867,7 +817,7 @@ public class
 
         if (getFull) {
             filename[0] = lastDelta.getOut().getName();
-            if (!downloadDeltaFile(url_base_full, lastDelta.getOut(), lastDelta.getOut()
+            if (!downloadDeltaFile(config.getUrlBaseFull(), lastDelta.getOut(), lastDelta.getOut()
                     .getOfficial(), progressListener, force)) {
                 updateState(STATE_ERROR_UNKNOWN, null, null, null, null, null);
                 Logger.d("download error");
@@ -876,7 +826,8 @@ public class
         } else {
             for (DeltaInfo di : deltas) {
                 filename[0] = di.getUpdate().getName();
-                if (!downloadDeltaFile(url_base_update, di.getUpdate(), di.getUpdate().getUpdate(),
+                if (!downloadDeltaFile(config.getUrlBaseUpdate(), di.getUpdate(), di.getUpdate()
+                        .getUpdate(),
                         progressListener, force)) {
                     updateState(STATE_ERROR_UNKNOWN, null, null, null, null, null);
                     Logger.d("download error");
@@ -885,10 +836,11 @@ public class
                 last[0] += di.getUpdate().getUpdate().getSize();
             }
 
-            if (apply_signature) {
+            if (config.getApplySignature()) {
                 filename[0] = lastDelta.getSignature().getName();
-                if (!downloadDeltaFile(url_base_update, lastDelta.getSignature(), lastDelta
-                        .getSignature().getUpdate(), progressListener, force)) {
+                if (!downloadDeltaFile(config.getUrlBaseUpdate(), lastDelta.getSignature(),
+                        lastDelta
+                                .getSignature().getUpdate(), progressListener, force)) {
                     updateState(STATE_ERROR_UNKNOWN, null, null, null, null, null);
                     Logger.d("download error");
                     return false;
@@ -910,7 +862,7 @@ public class
 
         int tempFile = 0;
         String[] tempFiles = new String[] {
-                path_base + "temp1", path_base + "temp2"
+                config.getPathBase() + "temp1", config.getPathBase() + "temp2"
         };
         try {
             long start = SystemClock.elapsedRealtime();
@@ -921,7 +873,7 @@ public class
                 total += firstDelta.getIn().getStore().getSize();
             for (DeltaInfo di : deltas)
                 total += di.getUpdate().getApplied().getSize();
-            if (apply_signature)
+            if (config.getApplySignature())
                 total += lastDelta.getSignature().getApplied().getSize();
 
             if (initialFileNeedsProcessing) {
@@ -939,10 +891,11 @@ public class
                 if (!initialFileNeedsProcessing && (di == firstDelta))
                     inFile = initialFile;
                 String outFile = tempFiles[tempFile];
-                if (!apply_signature && (di == lastDelta))
-                    outFile = path_base + lastDelta.getOut().getName();
+                if (!config.getApplySignature() && (di == lastDelta))
+                    outFile = config.getPathBase() + lastDelta.getOut().getName();
 
-                if (!dedelta(inFile, path_base + di.getUpdate().getName(), outFile, start, current,
+                if (!dedelta(inFile, config.getPathBase() + di.getUpdate().getName(), outFile,
+                        start, current,
                         total)) {
                     updateState(STATE_ERROR_UNKNOWN, null, null, null, null, null);
                     Logger.d("dedelta error");
@@ -952,9 +905,9 @@ public class
                 current += di.getUpdate().getApplied().getSize();
             }
 
-            if (apply_signature) {
-                if (!dedelta(tempFiles[(tempFile + 1) % 2], path_base
-                        + lastDelta.getSignature().getName(), path_base
+            if (config.getApplySignature()) {
+                if (!dedelta(tempFiles[(tempFile + 1) % 2], config.getPathBase()
+                        + lastDelta.getSignature().getName(), config.getPathBase()
                         + lastDelta.getOut().getName(), start, current, total)) {
                     updateState(STATE_ERROR_UNKNOWN, null, null, null, null, null);
                     Logger.d("dedelta error");
@@ -987,7 +940,7 @@ public class
         String flashFilename = prefs.getString(PREF_READY_FILENAME_NAME,
                 PREF_READY_FILENAME_DEFAULT);
         prefs.edit().putString(PREF_READY_FILENAME_NAME, PREF_READY_FILENAME_DEFAULT).commit();
-        if ((flashFilename == null) || !flashFilename.startsWith(path_base))
+        if ((flashFilename == null) || !flashFilename.startsWith(config.getPathBase()))
             return;
 
         // Remove the path to the storage from the filename, so we get a path
@@ -998,12 +951,12 @@ public class
         // Find additional ZIPs to flash
         List<String> extras = new ArrayList<String>();
         {
-            File[] files = (new File(path_flash_after_update)).listFiles();
+            File[] files = (new File(config.getPathFlashAfterUpdate())).listFiles();
             if (files != null) {
                 for (File f : files) {
                     if (f.getName().toLowerCase(Locale.ENGLISH).endsWith(".zip")) {
                         String filename = f.getAbsolutePath();
-                        if (filename.startsWith(path_base)) {
+                        if (filename.startsWith(config.getPathBase())) {
                             extras.add(filename.substring(path_sd.length()));
                         }
                     }
@@ -1014,8 +967,8 @@ public class
 
         try {
             // We're using TWRP's openrecoveryscript as primary, and CWM's
-            // extendedcommand as fallback. Using AOSP's command would 
-            // break older TWRPs. extendedcommand is broken on 'official' 
+            // extendedcommand as fallback. Using AOSP's command would
+            // break older TWRPs. extendedcommand is broken on 'official'
             // CWM builds, though.
 
             // TWRP - OpenRecoveryScript - the recovery will find the correct
@@ -1067,7 +1020,8 @@ public class
 
             ((PowerManager) getSystemService(Context.POWER_SERVICE)).reboot("recovery");
         } catch (Exception e) {
-            // We have failed to write something. There's not really anything else to do at 
+            // We have failed to write something. There's not really anything
+            // else to do at
             // at this stage than give up. No reason to crash though.
             Logger.ex(e);
         }
@@ -1099,20 +1053,22 @@ public class
                     List<DeltaInfo> deltas = new ArrayList<DeltaInfo>();
 
                     String flashFilename = null;
-                    (new File(path_base)).mkdir();
-                    (new File(path_flash_after_update)).mkdir();
+                    (new File(config.getPathBase())).mkdir();
+                    (new File(config.getPathFlashAfterUpdate())).mkdir();
 
                     // Create a list of deltas to apply to get from our current
                     // version to the latest
-                    String fetch = String.format(Locale.ENGLISH, "%s%s.delta", url_base_delta,
-                            filename_base);
+                    String fetch = String.format(Locale.ENGLISH, "%s%s.delta",
+                            config.getUrlBaseDelta(),
+                            config.getFilenameBase());
                     while (true) {
                         DeltaInfo delta = null;
 
                         try {
                             delta = new DeltaInfo(downloadUrlMemory(fetch), false);
                         } catch (JSONException e) {
-                            // There's an error in the JSON. Could be bad JSON, could be a 404 text, etc
+                            // There's an error in the JSON. Could be bad JSON,
+                            // could be a 404 text, etc
                             Logger.ex(e);
                         } catch (NullPointerException e) {
                             // Download failed
@@ -1127,21 +1083,24 @@ public class
                                 delta = new DeltaInfo(downloadUrlMemory(fetch.replace(".delta",
                                         ".delta_revoked")), true);
                             } catch (JSONException e) {
-                                // There's an error in the JSON. Could be bad JSON, could be a 404 text, etc
+                                // There's an error in the JSON. Could be bad
+                                // JSON, could be a 404 text, etc
                                 Logger.ex(e);
                             } catch (NullPointerException e) {
                                 // Download failed
                                 Logger.ex(e);
                             }
-                            
-                            // We didn't get a delta or a delta_revoked - end of the delta availability chain
+
+                            // We didn't get a delta or a delta_revoked - end of
+                            // the delta availability chain
                             if (delta == null)
                                 break;
                         }
 
                         Logger.d("delta --> [%s]", delta.getOut().getName());
-                        fetch = String.format(Locale.ENGLISH, "%s%s.delta", url_base_delta, delta
-                                .getOut().getName().replace(".zip", ""));
+                        fetch = String.format(Locale.ENGLISH, "%s%s.delta",
+                                config.getUrlBaseDelta(), delta
+                                        .getOut().getName().replace(".zip", ""));
                         deltas.add(delta);
                     }
 
@@ -1152,7 +1111,7 @@ public class
                         int last = -1;
                         for (int i = deltas.size() - 1; i >= 0; i--) {
                             DeltaInfo di = deltas.get(i);
-                            String fn = path_base + di.getOut().getName();
+                            String fn = config.getPathBase() + di.getOut().getName();
                             if (di.getOut()
                                     .match(new File(fn),
                                             true,
@@ -1191,7 +1150,7 @@ public class
                         boolean initialFileNeedsProcessing = false;
                         {
                             boolean[] needsProcessing = new boolean[] {
-                                false
+                                    false
                             };
                             initialFile = findInitialFile(deltas, flashFilename, needsProcessing);
                             initialFileNeedsProcessing = needsProcessing[0];
@@ -1205,7 +1164,7 @@ public class
                         boolean getFull = ((initialFile == null) || (deltaDownloadSize > fullDownloadSize));
 
                         long requiredSpace = getRequiredSpace(deltas, getFull);
-                        long freeSpace = (new StatFs(path_base)).getAvailableBytes();
+                        long freeSpace = (new StatFs(config.getPathBase())).getAvailableBytes();
                         if (freeSpace < requiredSpace) {
                             updateState(STATE_ERROR_DISK_SPACE, null, freeSpace, requiredSpace,
                                     null, null);
@@ -1226,7 +1185,7 @@ public class
 
                         // Verify using MD5
                         if (lastDelta.getOut().match(
-                                new File(path_base + lastDelta.getOut().getName()),
+                                new File(config.getPathBase() + lastDelta.getOut().getName()),
                                 true,
                                 getMD5Progress(STATE_ACTION_APPLYING_MD5, lastDelta.getOut()
                                         .getName())) == null) {
@@ -1238,17 +1197,17 @@ public class
 
                         // Cleanup
                         for (DeltaInfo di : deltas) {
-                            (new File(path_base + di.getUpdate().getName())).delete();
-                            (new File(path_base + di.getSignature().getName())).delete();
+                            (new File(config.getPathBase() + di.getUpdate().getName())).delete();
+                            (new File(config.getPathBase() + di.getSignature().getName())).delete();
                             if (di != lastDelta)
-                                (new File(path_base + di.getOut().getName())).delete();
+                                (new File(config.getPathBase() + di.getOut().getName())).delete();
                         }
                         if (initialFile != null) {
-                            if (initialFile.startsWith(path_base))
+                            if (initialFile.startsWith(config.getPathBase()))
                                 (new File(initialFile)).delete();
                         }
 
-                        flashFilename = path_base + lastDelta.getOut().getName();
+                        flashFilename = config.getPathBase() + lastDelta.getOut().getName();
                     }
 
                     if (flashFilename != null) {
