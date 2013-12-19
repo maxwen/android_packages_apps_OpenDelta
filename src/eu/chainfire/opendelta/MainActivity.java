@@ -53,6 +53,8 @@ public class MainActivity extends Activity {
     private ProgressBar progress = null;
     private Button checkNow = null;
     private Button flashNow = null;
+    
+    private Config config;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,11 +78,20 @@ public class MainActivity extends Activity {
         progress = (ProgressBar) findViewById(R.id.progress);
         checkNow = (Button) findViewById(R.id.button_check_now);
         flashNow = (Button) findViewById(R.id.button_flash_now);
+        
+        config = Config.getInstance(this);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
+        
+        if (!config.getSecureModeEnable()) {
+            menu.findItem(R.id.action_secure_mode).setVisible(false);
+        } else {
+            menu.findItem(R.id.action_secure_mode).setChecked(config.getSecureModeCurrent());
+        }
+        
         return true;
     }
 
@@ -170,6 +181,17 @@ public class MainActivity extends Activity {
                 return true;
             case R.id.action_networks:
                 showNetworks();
+                return true;
+            case R.id.action_secure_mode:
+                item.setChecked(config.setSecureModeCurrent(!item.isChecked()));
+                
+                (new AlertDialog.Builder(this)).
+                    setTitle(item.isChecked() ? R.string.secure_mode_enabled_title : R.string.secure_mode_disabled_title).
+                    setMessage(Html.fromHtml(getString(item.isChecked() ? R.string.secure_mode_enabled_description : R.string.secure_mode_disabled_description))).
+                    setCancelable(true).
+                    setNeutralButton(android.R.string.ok, null).
+                    show();
+                
                 return true;
             case R.id.action_about:
                 showAbout();
@@ -311,8 +333,78 @@ public class MainActivity extends Activity {
     }
 
     public void onButtonFlashNowClick(View v) {
-        UpdateService.startFlash(this);
-        checkNow.setEnabled(false);
-        flashNow.setEnabled(false);
+        flashRecoveryWarning.run();
     }
+    
+    private Runnable flashRecoveryWarning = new Runnable() {        
+        @Override
+        public void run() {
+            // Show a warning message about recoveries we support, depending
+            // on the state of secure mode and if we've shown the message before
+            
+            final Runnable next = flashWarningFlashAfterUpdateZIPs;
+            
+            CharSequence message = null;
+            if (!config.getSecureModeCurrent() && !config.getShownRecoveryWarningNotSecure()) {
+                message = Html.fromHtml(getString(R.string.recovery_notice_description_not_secure));
+                config.setShownRecoveryWarningNotSecure();
+            } else if (config.getSecureModeCurrent() && !config.getShownRecoveryWarningSecure()) {
+                message = Html.fromHtml(getString(R.string.recovery_notice_description_secure));            
+                config.setShownRecoveryWarningSecure();
+            }
+                
+            if (message != null) {
+                (new AlertDialog.Builder(MainActivity.this)).
+                        setTitle(R.string.recovery_notice_title).
+                        setMessage(message).
+                        setCancelable(true).
+                        setNegativeButton(android.R.string.cancel, null).
+                        setPositiveButton(android.R.string.ok, new OnClickListener() {                        
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                next.run();
+                            }
+                        }).
+                        show();
+            } else {
+                next.run();
+            }
+        }
+    };
+    
+    private Runnable flashWarningFlashAfterUpdateZIPs = new Runnable() {
+        @Override
+        public void run() {
+            // If we're in secure mode, but additional ZIPs to flash have been
+            // detected, warn the user that these will not be flashed
+            
+            final Runnable next = flashStart;
+            
+            if (config.getSecureModeCurrent() && (config.getFlashAfterUpdateZIPs().size() > 0)) {
+                (new AlertDialog.Builder(MainActivity.this)).
+                setTitle(R.string.flash_after_update_notice_title).
+                setMessage(Html.fromHtml(getString(R.string.flash_after_update_notice_description))).
+                setCancelable(true).
+                setNegativeButton(android.R.string.cancel, null).
+                setPositiveButton(android.R.string.ok, new OnClickListener() {                        
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        next.run();
+                    }
+                }).
+                show();                
+            } else {
+                next.run();
+            }
+        }
+    };
+    
+    private Runnable flashStart = new Runnable() {       
+        @Override
+        public void run() {
+            checkNow.setEnabled(false);
+            flashNow.setEnabled(false);
+            UpdateService.startFlash(MainActivity.this);
+        }
+    };
 }

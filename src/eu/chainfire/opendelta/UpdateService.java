@@ -58,13 +58,15 @@ import org.json.JSONException;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -102,7 +104,7 @@ public class UpdateService
         intent.putExtra(EXTRA_ALARM_ID, id);
         return PendingIntent.getService(context, id, intent, 0);
     }
-
+   
     public static final String ACTION_SYSTEM_UPDATE_SETTINGS = "android.settings.SYSTEM_UPDATE_SETTINGS";
     public static final String PERMISSION_ACCESS_CACHE_FILESYSTEM = "android.permission.ACCESS_CACHE_FILESYSTEM";
     public static final String PERMISSION_REBOOT = "android.permission.REBOOT";
@@ -924,6 +926,10 @@ public class UpdateService
         return true;
     }
 
+    private void writeString(OutputStream os, String s) throws UnsupportedEncodingException, IOException {
+        os.write((s + "\n").getBytes("UTF-8"));
+    }
+
     @SuppressLint("SdCardPath")
     private void flashUpdate() {
         if (getPackageManager().checkPermission(PERMISSION_ACCESS_CACHE_FILESYSTEM,
@@ -948,46 +954,62 @@ public class UpdateService
         String path_sd = Environment.getExternalStorageDirectory() + File.separator;
         flashFilename = flashFilename.substring(path_sd.length());
 
-        // Find additional ZIPs to flash
-        List<String> extras = new ArrayList<String>();
-        {
-            File[] files = (new File(config.getPathFlashAfterUpdate())).listFiles();
-            if (files != null) {
-                for (File f : files) {
-                    if (f.getName().toLowerCase(Locale.ENGLISH).endsWith(".zip")) {
-                        String filename = f.getAbsolutePath();
-                        if (filename.startsWith(config.getPathBase())) {
-                            extras.add(filename.substring(path_sd.length()));
-                        }
-                    }
-                }
-            }
-            Collections.sort(extras);
+        // Find additional ZIPs to flash, strip path to sd
+        List<String> extras = config.getFlashAfterUpdateZIPs();
+        for (int i = 0; i < extras.size(); i++) {
+            extras.set(i, extras.get(i).substring(path_sd.length()));
         }
 
         try {
-            // We're using TWRP's openrecoveryscript as primary, and CWM's
-            // extendedcommand as fallback. Using AOSP's command would
-            // break older TWRPs. extendedcommand is broken on 'official'
-            // CWM builds, though.
-
             // TWRP - OpenRecoveryScript - the recovery will find the correct
-            // storage root for the ZIPs,
-            // life is nice and easy.
-            if ((flashFilename != null) && (!flashFilename.equals(""))) {
+            // storage root for the ZIPs, life is nice and easy.
+            //
+            // Optionally, we're injecting our own signature verification keys
+            // and verifying against those. We place these keys in /cache
+            // where only privileged apps can edit, contrary to the storage
+            // location of the ZIP itself - anyone can modify the ZIP.
+            // As such, flashing the ZIP without checking the whole-file
+            // signature coming from a secure location would be a security 
+            // risk.
+            {
+                if (config.getInjectSignatureEnable()) {
+                    FileOutputStream os = new FileOutputStream("/cache/recovery/keys", false);
+                    try {
+                        writeString(os, config.getInjectSignatureKeys());
+                    } finally {
+                        os.close();
+                    }
+                    setPermissions("/cache/recovery/keys", 0644, Process.myUid(), 2001 /* AID_CACHE */);
+                }
+                
                 FileOutputStream os = new FileOutputStream("/cache/recovery/openrecoveryscript",
                         false);
                 try {
-                    os.write(String.format("install %s\n", flashFilename).getBytes("UTF-8"));
-                    for (String file : extras) {
-                        os.write(String.format("install %s\n", file).getBytes("UTF-8"));
+                    if (config.getInjectSignatureEnable()) {
+                        writeString(os, "cmd cat /res/keys > /res/keys_org");
+                        writeString(os, "cmd cat /cache/recovery/keys > /res/keys");
+                        writeString(os, "set tw_signed_zip_verify 1");
+                        writeString(os, String.format("install %s", flashFilename));
+                        writeString(os, "set tw_signed_zip_verify 0");
+                        writeString(os, "cmd cat /res/keys_org > /res/keys");
+                        writeString(os, "cmd rm /res/keys_org");
+                    } else {
+                        writeString(os, String.format("install %s", flashFilename));                        
                     }
-                    os.write(("wipe cache\n").getBytes("UTF-8"));
+
+                    if (!config.getSecureModeCurrent()) {
+                        // any program could have placed these ZIPs, so ignore them in secure mode
+                        for (String file : extras) {
+                            writeString(os, String.format("install %s", file));
+                        }
+                    }
+                    writeString(os, "wipe cache");
                 } finally {
                     os.close();
                 }
+                
+                setPermissions("/cache/recovery/openrecoveryscript", 0644, Process.myUid(), 2001 /* AID_CACHE */);
             }
-            setPermissions("/cache/recovery/openrecoveryscript", 0644, Process.myUid(), 2001 /* AID_CACHE */);
 
             // CWM - ExtendedCommand - provide paths to both internal and
             // external storage locations, it's nigh impossible to know in
@@ -997,31 +1019,31 @@ public class UpdateService
             // versions to have them reversed. It'll give some horrible looking
             // results, but it seems to continue installing even if one ZIP
             // fails and produce the wanted result. Better than nothing ...
-            if ((flashFilename != null) && (!flashFilename.equals(""))) {
+            //
+            // We don't generate a CWM script in secure mode, because it 
+            // doesn't support checking our custom signatures
+            if (!config.getSecureModeCurrent()) {
                 FileOutputStream os = new FileOutputStream("/cache/recovery/extendedcommand", false);
                 try {
-                    os.write(String.format("install_zip(\"%s%s\");\n", "/sdcard/", flashFilename)
-                            .getBytes("UTF-8"));
-                    os.write(String.format("install_zip(\"%s%s\");\n", "/emmc/", flashFilename)
-                            .getBytes("UTF-8"));
+                    writeString(os, String.format("install_zip(\"%s%s\");", "/sdcard/", flashFilename));
+                    writeString(os, String.format("install_zip(\"%s%s\");", "/emmc/", flashFilename));
                     for (String file : extras) {
-                        os.write(String.format("install_zip(\"%s%s\");\n", "/sdcard/", file)
-                                .getBytes("UTF-8"));
-                        os.write(String.format("install_zip(\"%s%s\");\n", "/emmc/", file)
-                                .getBytes("UTF-8"));
+                        writeString(os, String.format("install_zip(\"%s%s\");", "/sdcard/", file));
+                        writeString(os, String.format("install_zip(\"%s%s\");", "/emmc/", file));
                     }
-                    os.write(("run_program(\"/sbin/busybox\", \"rm\", \"-rf\", \"/cache/*\");\n")
-                            .getBytes("UTF-8"));
+                    writeString(os, "run_program(\"/sbin/busybox\", \"rm\", \"-rf\", \"/cache/*\");");
                 } finally {
                     os.close();
                 }
+
+                setPermissions("/cache/recovery/extendedcommand", 0644, Process.myUid(), 2001 /* AID_CACHE */);
+            } else {
+                (new File("/cache/recovery/extendedcommand")).delete();
             }
-            setPermissions("/cache/recovery/extendedcommand", 0644, Process.myUid(), 2001 /* AID_CACHE */);
 
             ((PowerManager) getSystemService(Context.POWER_SERVICE)).reboot("recovery");
         } catch (Exception e) {
-            // We have failed to write something. There's not really anything
-            // else to do at
+            // We have failed to write something. There's not really anything else to do at 
             // at this stage than give up. No reason to crash though.
             Logger.ex(e);
         }

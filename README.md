@@ -39,6 +39,9 @@ fail anyway (if enabled). So to save a bit of processing, this feature is
 turned off by default. The needed files are generated and the client knows how 
 to deal with them, so enabling this feature is just a configuration switch away.
 
+**TODO** Update this signature documentation and "secure mode". Signature 
+verification can now be enabled. 
+
 The produced delta files are pushed to the public download server, and the 
 current build is saved to a private location to serve as input for the next
 differential run. 
