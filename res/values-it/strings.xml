@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OpenDelta</string>
-    <string name="title">Aggiornamenti Sistema</string>
+    <string name="title">Aggiornamenti di sistema</string>
 
     <string name="action_networks">Reti</string>
     <string name="title_networks">Aggiornamento automatico</string>
