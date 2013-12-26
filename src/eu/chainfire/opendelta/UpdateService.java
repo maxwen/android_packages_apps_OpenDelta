@@ -22,6 +22,7 @@
 package eu.chainfire.opendelta;
 
 import android.annotation.SuppressLint;
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -135,6 +136,7 @@ public class UpdateService
     private static final String ACTION_FLASH = "eu.chainfire.opendelta.action.FLASH";
     private static final String ACTION_ALARM = "eu.chainfire.opendelta.action.ALARM";
     private static final String EXTRA_ALARM_ID = "eu.chainfire.opendelta.extra.ALARM_ID";
+    private static final String ACTION_NOTIFICATION_DELETED = "eu.chainfire.opendelta.action.NOTIFICATION_DELETED";
 
     private static final int NOTIFICATION_BUSY = 1;
     private static final int NOTIFICATION_UPDATE = 2;
@@ -144,6 +146,11 @@ public class UpdateService
 
     private static final String PREF_LAST_CHECK_TIME_NAME = "last_check_time";
     private static final long PREF_LAST_CHECK_TIME_DEFAULT = 0L;
+
+    private static final String PREF_LAST_SNOOZE_TIME_NAME = "last_snooze_time";
+    private static final long PREF_LAST_SNOOZE_TIME_DEFAULT = 0L;
+    
+    private static final long SNOOZE_MS = 24 * AlarmManager.INTERVAL_HOUR;    
 
     public static final String PREF_AUTO_UPDATE_NETWORKS_NAME = "auto_update_networks";
     public static final int PREF_AUTO_UPDATE_NETWORKS_DEFAULT = NetworkState.ALLOW_WIFI
@@ -257,6 +264,11 @@ public class UpdateService
                 flashUpdate();
             } else if (ACTION_ALARM.equals(intent.getAction())) {
                 scheduler.alarm(intent.getIntExtra(EXTRA_ALARM_ID, -1));
+                autoState();
+            } else if (ACTION_NOTIFICATION_DELETED.equals(intent.getAction())) {
+                Logger.i("Snoozing for 24 hours");
+                prefs.edit().putLong(PREF_LAST_SNOOZE_TIME_NAME, System.currentTimeMillis()).commit();
+                autoState();
             }
         }
 
@@ -330,16 +342,28 @@ public class UpdateService
                     prefs.getLong(PREF_LAST_CHECK_TIME_NAME, PREF_LAST_CHECK_TIME_DEFAULT));
         } else {
             Logger.i("Update found: %s", filename);
-            startNotification();
             updateState(STATE_ACTION_READY, null, null, null, (new File(filename)).getName(),
                     prefs.getLong(PREF_LAST_CHECK_TIME_NAME, PREF_LAST_CHECK_TIME_DEFAULT));
+            
+            // check if we're snoozed, using abs for clock changes
+            if (Math.abs(System.currentTimeMillis() - prefs.getLong(PREF_LAST_SNOOZE_TIME_NAME, PREF_LAST_SNOOZE_TIME_DEFAULT)) > SNOOZE_MS) {
+                startNotification();
+            } else {
+                stopNotification();
+            }            
         }
     }
 
-    private PendingIntent getNotificationIntent() {
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        notificationIntent.setAction(ACTION_SYSTEM_UPDATE_SETTINGS);
-        return PendingIntent.getActivity(this, 0, notificationIntent, 0);
+    private PendingIntent getNotificationIntent(boolean delete) {
+        if (delete) {
+            Intent notificationIntent = new Intent(this, UpdateService.class);
+            notificationIntent.setAction(ACTION_NOTIFICATION_DELETED);
+            return PendingIntent.getService(this, 0, notificationIntent, 0);
+        } else {
+            Intent notificationIntent = new Intent(this, MainActivity.class);
+            notificationIntent.setAction(ACTION_SYSTEM_UPDATE_SETTINGS);
+            return PendingIntent.getActivity(this, 0, notificationIntent, 0);            
+        }
     }
 
     private void startNotification() {
@@ -352,7 +376,8 @@ public class UpdateService
                                 setContentText(getString(R.string.notify_update_available)).
                                 setTicker(getString(R.string.notify_update_available)).
                                 setShowWhen(false).
-                                setContentIntent(getNotificationIntent()).
+                                setContentIntent(getNotificationIntent(false)).
+                                setDeleteIntent(getNotificationIntent(true)).
                                 build()
                 );
     }
@@ -1062,7 +1087,7 @@ public class UpdateService
                 setContentText(getString(R.string.notify_checking)).
                 setTicker(getString(R.string.notify_checking)).
                 setShowWhen(false).
-                setContentIntent(getNotificationIntent()).
+                setContentIntent(getNotificationIntent(false)).
                 build();
         startForeground(NOTIFICATION_BUSY, notification);
 
