@@ -160,7 +160,14 @@ public class Config {
     }
     
     public boolean getInjectSignatureEnable() {
-        return inject_signature_enable;
+        // If we have full secure mode, let signature depend on secure mode 
+        // setting. If not, let signature depend on config setting only
+        
+        if (getSecureModeEnable()) {
+            return getSecureModeCurrent();
+        } else {
+            return inject_signature_enable;
+        }
     }
     
     public String getInjectSignatureKeys() {
