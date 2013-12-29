@@ -1,4 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">OpenDelta</string>
     <string name="title">Aggiornamenti di sistema</string>
 
@@ -16,19 +16,19 @@
     <string name="about_content"><![CDATA[
         Copyright &copy; _COPYRIGHT_OPENDELTA_ <b>Jorrit \'Chainfire\' Jongma</b><br>
         <br>
-        Originally created for <b>The OmniROM Project</b><br>
+        Creato originariamente per <b>The OmniROM Project</b><br>
         <br>
-        Licensed under the terms of the <b>GNU General Public License, version 3.0 (GPLv3)</b><br>
+        Rilasciato sotto i termini della <b>GNU General Public License, version 3.0 (GPLv3)</b><br>
         <br>
-        Delta decoding based on <b>xdelta</b>, copyright &copy; _COPYRIGHT_XDELTA_ <b>Joshua MacDonald</b><br>
+        Decoding Delta basato su <b>xdelta</b>, copyright &copy; _COPYRIGHT_XDELTA_ <b>Joshua MacDonald</b><br>
     ]]></string>
 
-    <string name="state_action_none">Il Sistema è aggiornato</string>
+    <string name="state_action_none">Il sistema è aggiornato</string>
     <string name="state_action_checking">Controllo aggiornamenti&#8230;</string>
     <string name="state_action_checking_md5">Verifica file&#8230;</string>
     <string name="state_action_searching">Ricerca file&#8230;</string>
     <string name="state_action_searching_md5">Verifica file&#8230;</string>
-    <string name="state_action_downloading">In download&#8230;</string>
+    <string name="state_action_downloading">In Download&#8230;</string>
     <string name="state_action_applying">Aggiornamento&#8230;</string>
     <string name="state_action_applying_patch">Aggiornamento&#8230;</string>
     <string name="state_action_applying_md5">Verifica file&#8230;</string>
