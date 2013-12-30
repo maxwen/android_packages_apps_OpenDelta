@@ -1019,6 +1019,7 @@ public class UpdateService
                         writeString(os, "cmd cat /res/keys_org > /res/keys");
                         writeString(os, "cmd rm /res/keys_org");
                     } else {
+                        writeString(os, "set tw_signed_zip_verify 0");
                         writeString(os, String.format("install %s", flashFilename));                        
                     }
 
