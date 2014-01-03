@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_secure_mode">Säkert läge</string>
+    <string name="secure_mode_enabled_title">Säkert läge aktiverat</string>
+    <string name="secure_mode_enabled_description"><![CDATA[Uppdateringens kryptografiska signatur kommer att verifieras innan installationen för att bekräfta dess ursprung, och inga övriga uppdateringar kommer att installeras. Detta läge är endast kompatibelt med <b>TWRP</b>.]]></string>
+    <string name="secure_mode_disabled_title">Säkert läge inaktiverat</string>
+    <string name="secure_mode_disabled_description"><![CDATA[Ytterligare uppdateringar kommer att installeras om tillgängliga. Lägg märke till att vilken (illasinnad) mjukvara som helst kan finnas i dessa uppdateringar och genom det få fulla rättigheter till systemet. Försiktighet bör iakttas.]]></string>
+    <string name="recovery_notice_title">Meddelande</string>
+    <string name="recovery_notice_description_secure"><![CDATA[Installation av uppdateringar i det nuvarande läget stöds endast av <b>TWRP</b>. Var god försäkra dig om att du kör en kompatibel recovery innan du fortsätter.]]></string>
+    <string name="recovery_notice_description_not_secure"><![CDATA[Installation av uppdateringar i det nuvarande läget är endast officiellt stött av <b>TWRP</b>. <i>Officiella</i> <b>CWM</b>-recoveries är <i>inte</i> stödda, dock finns <i>möjligheten</i> att några <i>communityutvecklade</i> versioner av <b>CWM</b> fortfarande fungerar. Var god se till att du kör en kompatibel recovery innan du fortsätter.]]></string>
+    <string name="flash_after_update_notice_title">Meddelande</string>
+    <string name="flash_after_update_notice_description"><![CDATA[Ytterligare uppdateringar finns tillgängliga i mappen <b>FlashAfterUpdate</b>, men säkert läge är aktiverat. Om du fortsätter kommer dessa uppdateringar <b>inte</b> att installeras.]]></string>
+</resources>
