@@ -46,4 +46,18 @@
 
     <string name="button_check_now">Controlla ora&#8230;</string>
     <string name="button_flash_now">Installa ora</string>
+    
+    <!-- updates from 2013/12/18 -->
+    
+    <string name="action_secure_mode">Sicurezza</string>
+    <string name="secure_mode_enabled_title">Modalità Sicura: attivata</string>
+    <string name="secure_mode_enabled_description"><![CDATA[La firma dell\'aggiornamento verrà verificata prima dell\'installazione per confermarne l\'origine,nessun aggiornamento aggiuntivo verrà installato. Questa modalità è compatibile solo con la recovery <b>TWRP</b>.]]></string>
+
+    <string name="secure_mode_disabled_title">Modalità Sicura: disattivata</string>
+    <string name="secure_mode_disabled_description"><![CDATA[Verranno installati aggiornamenti aggiuntivi se presenti. Ricorda che ogni pacchetto software (pericoloso) potrebbe inserire questi aggiornamenti per guadagnare il controllo del sistema. Perciò fai molta attenzione.]]></string>
+    <string name="recovery_notice_title">Attenzione</string>
+    <string name="recovery_notice_description_secure"><![CDATA[L\'installazione degli aggiornamenti in questa modalità è supportata solo dalla recovery <b>TWRP</b>. Assicurati di utilizzare una recovery compatibile prima di proseguire.]]></string>
+    <string name="recovery_notice_description_not_secure"><![CDATA[L\'installazione degli aggiornamenti in questa modalità è supportata ufficialmente solo dalla recovery <b>TWRP</b>. Le versioni <i>ufficiali</i> <b>CWM</b> <i>non</i> sono supportate, anche se alcune versioni <b>CWM</b> <i>realizzate nella community</i> <i>potrebbero</i> funzionare comunque. Assicurati di utilizzare una recovery compatibile prima di proseguire.]]></string>
+    <string name="flash_after_update_notice_title">Attenzione</string>
+    <string name="flash_after_update_notice_description"><![CDATA[Nella cartella <b>FlashAfterUpdate</b> sono presenti degli aggiornamenti aggiuntivi, ma la Modalità Sicura è attivata. Se prosegui, questi aggiornamenti aggiuntivi <b>non</b> verranno installati.]]></string>
 </resources>
