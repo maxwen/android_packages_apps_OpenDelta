@@ -217,7 +217,7 @@ public class UpdateService
 
         wakeLock = ((PowerManager) getSystemService(POWER_SERVICE)).newWakeLock(
                 config.getKeepScreenOn() ?
-                        PowerManager.SCREEN_DIM_WAKE_LOCK :
+                        PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP :
                         PowerManager.PARTIAL_WAKE_LOCK,
                 "OpenDelta WakeLock");
         wifiLock = ((WifiManager) getSystemService(WIFI_SERVICE)).createWifiLock(
