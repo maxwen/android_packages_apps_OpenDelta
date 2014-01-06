@@ -212,8 +212,6 @@ public class UpdateService
     public void onCreate() {
         super.onCreate();
 
-        Logger.setDebugLogging(getResources().getBoolean(R.bool.debug_output));
-
         config = Config.getInstance(this);
 
         wakeLock = ((PowerManager) getSystemService(POWER_SERVICE)).newWakeLock(
