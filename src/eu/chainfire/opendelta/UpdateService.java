@@ -42,6 +42,7 @@ import android.os.Process;
 import android.os.StatFs;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
+import android.text.TextUtils;
 
 import eu.chainfire.opendelta.BatteryState.OnBatteryStateListener;
 import eu.chainfire.opendelta.NetworkState.OnNetworkStateListener;
@@ -506,9 +507,6 @@ public class UpdateService
     }
 
     private String findZIPOnSD(DeltaInfo.FileFull zip, File base) {
-        if (base == null)
-            base = Environment.getExternalStorageDirectory();
-
         Logger.d("scanning: %s", base.getAbsolutePath());
         File[] list = base.listFiles();
         if (list != null) {
@@ -801,10 +799,25 @@ public class UpdateService
 
         // If the user flashed manually, the file is probably not in our
         // preferred location (assuming it wasn't sideloaded), so search
-        // the (internal) storage for it. Should at some point be
-        // extended to search (true) external storage as well.
+        // the storages for it.
         if (initialFile == null) {
-            initialFile = findZIPOnSD(firstDelta.getIn(), null);
+            // Primary external storage ( == internal storage)
+            initialFile = findZIPOnSD(firstDelta.getIn(), Environment.getExternalStorageDirectory());
+            
+            if (initialFile == null) {
+                // Search secondary external storages ( == sdcards, OTG drives, etc)                 
+                String secondaryStorages = System.getenv("SECONDARY_STORAGE");
+                if ((secondaryStorages != null) && (secondaryStorages.length() > 0)) {            
+                    String[] storages = TextUtils.split(secondaryStorages, File.pathSeparator);
+                    for (String storage : storages) {
+                        initialFile = findZIPOnSD(firstDelta.getIn(), new File(storage));
+                        if (initialFile != null) {
+                            break;
+                        }
+                    }
+                }
+            }
+            
             if (initialFile != null) {
                 match = firstDelta.getIn().match(new File(initialFile), false, null);
             }
