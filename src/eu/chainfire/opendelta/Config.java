@@ -63,6 +63,7 @@ public class Config {
     private final String inject_signature_keys;
     private final boolean secure_mode_enable;
     private final boolean secure_mode_default;
+    private final boolean keep_screen_on;
 
     /*
      * Using reflection voodoo instead calling the hidden class directly, to
@@ -115,6 +116,21 @@ public class Config {
         inject_signature_keys = res.getString(R.string.inject_signature_keys);
         secure_mode_enable = res.getBoolean(R.bool.secure_mode_enable);
         secure_mode_default = res.getBoolean(R.bool.secure_mode_default);
+        
+        boolean keep_screen_on = false;
+        try {
+            String[] devices = res.getStringArray(R.array.keep_screen_on_devices);
+            if (devices != null) {
+                for (String device : devices) {
+                    if (property_device.equals(device)) {
+                        keep_screen_on = true;
+                        break;
+                    }
+                }
+            }
+        } catch (Resources.NotFoundException e) {
+        }
+        this.keep_screen_on = keep_screen_on;
 
         Logger.d("property_version: %s", property_version);
         Logger.d("property_device: %s", property_device);
@@ -129,6 +145,7 @@ public class Config {
         Logger.d("inject_signature_keys: %s", inject_signature_keys);
         Logger.d("secure_mode_enable: %d", secure_mode_enable ? 1 : 0);
         Logger.d("secure_mode_default: %d", secure_mode_default ? 1 : 0);
+        Logger.d("keep_screen_on: %d", keep_screen_on ? 1 : 0);
     }
     
     public String getFilenameBase() {
@@ -224,5 +241,9 @@ public class Config {
 
     public void setShownRecoveryWarningNotSecure() {
         prefs.edit().putBoolean(PREF_SHOWN_RECOVERY_WARNING_NOT_SECURE_NAME, true).commit();
-    }    
+    }
+    
+    public boolean getKeepScreenOn() {
+        return keep_screen_on;
+    }
 }

@@ -105,7 +105,7 @@ public class UpdateService
         intent.putExtra(EXTRA_ALARM_ID, id);
         return PendingIntent.getService(context, id, intent, 0);
     }
-   
+
     public static final String ACTION_SYSTEM_UPDATE_SETTINGS = "android.settings.SYSTEM_UPDATE_SETTINGS";
     public static final String PERMISSION_ACCESS_CACHE_FILESYSTEM = "android.permission.ACCESS_CACHE_FILESYSTEM";
     public static final String PERMISSION_REBOOT = "android.permission.REBOOT";
@@ -149,8 +149,8 @@ public class UpdateService
 
     private static final String PREF_LAST_SNOOZE_TIME_NAME = "last_snooze_time";
     private static final long PREF_LAST_SNOOZE_TIME_DEFAULT = 0L;
-    
-    private static final long SNOOZE_MS = 24 * AlarmManager.INTERVAL_HOUR;    
+
+    private static final long SNOOZE_MS = 24 * AlarmManager.INTERVAL_HOUR;
 
     public static final String PREF_AUTO_UPDATE_NETWORKS_NAME = "auto_update_networks";
     public static final int PREF_AUTO_UPDATE_NETWORKS_DEFAULT = NetworkState.ALLOW_WIFI
@@ -207,6 +207,7 @@ public class UpdateService
         return null;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onCreate() {
         super.onCreate();
@@ -216,7 +217,10 @@ public class UpdateService
         config = Config.getInstance(this);
 
         wakeLock = ((PowerManager) getSystemService(POWER_SERVICE)).newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK, "OpenDelta WakeLock");
+                config.getKeepScreenOn() ?
+                        PowerManager.SCREEN_DIM_WAKE_LOCK :
+                        PowerManager.PARTIAL_WAKE_LOCK,
+                "OpenDelta WakeLock");
         wifiLock = ((WifiManager) getSystemService(WIFI_SERVICE)).createWifiLock(
                 WifiManager.WIFI_MODE_FULL, "OpenDelta WifiLock");
 
@@ -267,7 +271,8 @@ public class UpdateService
                 autoState();
             } else if (ACTION_NOTIFICATION_DELETED.equals(intent.getAction())) {
                 Logger.i("Snoozing for 24 hours");
-                prefs.edit().putLong(PREF_LAST_SNOOZE_TIME_NAME, System.currentTimeMillis()).commit();
+                prefs.edit().putLong(PREF_LAST_SNOOZE_TIME_NAME, System.currentTimeMillis())
+                        .commit();
                 autoState();
             }
         }
@@ -344,13 +349,14 @@ public class UpdateService
             Logger.i("Update found: %s", filename);
             updateState(STATE_ACTION_READY, null, null, null, (new File(filename)).getName(),
                     prefs.getLong(PREF_LAST_CHECK_TIME_NAME, PREF_LAST_CHECK_TIME_DEFAULT));
-            
+
             // check if we're snoozed, using abs for clock changes
-            if (Math.abs(System.currentTimeMillis() - prefs.getLong(PREF_LAST_SNOOZE_TIME_NAME, PREF_LAST_SNOOZE_TIME_DEFAULT)) > SNOOZE_MS) {
+            if (Math.abs(System.currentTimeMillis()
+                    - prefs.getLong(PREF_LAST_SNOOZE_TIME_NAME, PREF_LAST_SNOOZE_TIME_DEFAULT)) > SNOOZE_MS) {
                 startNotification();
             } else {
                 stopNotification();
-            }            
+            }
         }
     }
 
@@ -362,7 +368,7 @@ public class UpdateService
         } else {
             Intent notificationIntent = new Intent(this, MainActivity.class);
             notificationIntent.setAction(ACTION_SYSTEM_UPDATE_SETTINGS);
-            return PendingIntent.getActivity(this, 0, notificationIntent, 0);            
+            return PendingIntent.getActivity(this, 0, notificationIntent, 0);
         }
     }
 
@@ -951,7 +957,8 @@ public class UpdateService
         return true;
     }
 
-    private void writeString(OutputStream os, String s) throws UnsupportedEncodingException, IOException {
+    private void writeString(OutputStream os, String s) throws UnsupportedEncodingException,
+            IOException {
         os.write((s + "\n").getBytes("UTF-8"));
     }
 
@@ -994,7 +1001,7 @@ public class UpdateService
             // where only privileged apps can edit, contrary to the storage
             // location of the ZIP itself - anyone can modify the ZIP.
             // As such, flashing the ZIP without checking the whole-file
-            // signature coming from a secure location would be a security 
+            // signature coming from a secure location would be a security
             // risk.
             {
                 if (config.getInjectSignatureEnable()) {
@@ -1006,7 +1013,7 @@ public class UpdateService
                     }
                     setPermissions("/cache/recovery/keys", 0644, Process.myUid(), 2001 /* AID_CACHE */);
                 }
-                
+
                 FileOutputStream os = new FileOutputStream("/cache/recovery/openrecoveryscript",
                         false);
                 try {
@@ -1020,11 +1027,12 @@ public class UpdateService
                         writeString(os, "cmd rm /res/keys_org");
                     } else {
                         writeString(os, "set tw_signed_zip_verify 0");
-                        writeString(os, String.format("install %s", flashFilename));                        
+                        writeString(os, String.format("install %s", flashFilename));
                     }
 
                     if (!config.getSecureModeCurrent()) {
-                        // any program could have placed these ZIPs, so ignore them in secure mode
+                        // any program could have placed these ZIPs, so ignore
+                        // them in secure mode
                         for (String file : extras) {
                             writeString(os, String.format("install %s", file));
                         }
@@ -1033,7 +1041,7 @@ public class UpdateService
                 } finally {
                     os.close();
                 }
-                
+
                 setPermissions("/cache/recovery/openrecoveryscript", 0644, Process.myUid(), 2001 /* AID_CACHE */);
             }
 
@@ -1046,18 +1054,21 @@ public class UpdateService
             // results, but it seems to continue installing even if one ZIP
             // fails and produce the wanted result. Better than nothing ...
             //
-            // We don't generate a CWM script in secure mode, because it 
+            // We don't generate a CWM script in secure mode, because it
             // doesn't support checking our custom signatures
             if (!config.getSecureModeCurrent()) {
                 FileOutputStream os = new FileOutputStream("/cache/recovery/extendedcommand", false);
                 try {
-                    writeString(os, String.format("install_zip(\"%s%s\");", "/sdcard/", flashFilename));
-                    writeString(os, String.format("install_zip(\"%s%s\");", "/emmc/", flashFilename));
+                    writeString(os,
+                            String.format("install_zip(\"%s%s\");", "/sdcard/", flashFilename));
+                    writeString(os,
+                            String.format("install_zip(\"%s%s\");", "/emmc/", flashFilename));
                     for (String file : extras) {
                         writeString(os, String.format("install_zip(\"%s%s\");", "/sdcard/", file));
                         writeString(os, String.format("install_zip(\"%s%s\");", "/emmc/", file));
                     }
-                    writeString(os, "run_program(\"/sbin/busybox\", \"rm\", \"-rf\", \"/cache/*\");");
+                    writeString(os,
+                            "run_program(\"/sbin/busybox\", \"rm\", \"-rf\", \"/cache/*\");");
                 } finally {
                     os.close();
                 }
@@ -1069,7 +1080,8 @@ public class UpdateService
 
             ((PowerManager) getSystemService(Context.POWER_SERVICE)).reboot("recovery");
         } catch (Exception e) {
-            // We have failed to write something. There's not really anything else to do at 
+            // We have failed to write something. There's not really anything
+            // else to do at
             // at this stage than give up. No reason to crash though.
             Logger.ex(e);
         }
@@ -1266,8 +1278,8 @@ public class UpdateService
                             .commit();
                 } finally {
                     stopForeground(true);
-                    wifiLock.release();
-                    wakeLock.release();
+                    if (wifiLock.isHeld()) wifiLock.release();
+                    if (wakeLock.isHeld()) wakeLock.release();
                     autoState();
                 }
             }

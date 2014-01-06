@@ -38,4 +38,15 @@
 
     <!-- (TWRP) Requires 'secure_mode_enable'. Decides whether the default setting for secure mode is enabled (true) or disabled (false) -->
     <item type="bool" name="secure_mode_default">true</item>
+    
+    <!-- 
+    	Devices (detected using property_device) which may crash while downloading/patching/verifying when the screen is off.
+    	This appears to be an issue with the fuse daemon, but the cause has not yet been found or fixed. Until the issue is
+    	repaired, this is a stop-gap solution.
+    -->
+    <string-array name="keep_screen_on_devices">
+        <item>i9100</item>
+        <item>n7000</item>
+        <item>i777</item>
+    </string-array>
 </resources>
