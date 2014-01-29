@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OpenDelta</string>
-    <string name="title">System Updates</string>
+    <string name="title">System updates</string>
 
     <string name="action_networks">Networks</string>
     <string name="title_networks">Auto-update networks</string>
