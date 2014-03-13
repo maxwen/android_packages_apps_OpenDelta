@@ -50,6 +50,18 @@ getFileSize() {
 	echo $(stat --print "%s" $1)
 }
 
+nextPowerOf2() {
+    local v=$1;
+    ((v -= 1));
+    ((v |= $v >> 1));
+    ((v |= $v >> 2));
+    ((v |= $v >> 4));
+    ((v |= $v >> 8));
+    ((v |= $v >> 16));
+    ((v += 1));
+    echo $v;
+}
+
 FILE_CURRENT=$(getFileName $(ls -1 $PATH_CURRENT/$FILE_MATCH))
 FILE_LAST=$(getFileName $(ls -1 $PATH_LAST/$FILE_MATCH))
 FILE_LAST_BASE=$(getFileNameNoExt $FILE_LAST)
@@ -80,8 +92,10 @@ $BIN_ZIPADJUST --decompress $PATH_CURRENT/$FILE_CURRENT work/current.zip
 $BIN_ZIPADJUST --decompress $PATH_LAST/$FILE_LAST work/last.zip
 $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 work/current.zip work/current_signed.zip
 $BIN_JAVA -Xmx1024m -jar $BIN_MINSIGNAPK $KEY_X509 $KEY_PK8 work/last.zip work/last_signed.zip
-$BIN_XDELTA -9evfS none -s work/last.zip work/current.zip out/$FILE_LAST_BASE.update
-$BIN_XDELTA -9evfS none -s work/current.zip work/current_signed.zip out/$FILE_LAST_BASE.sign
+SRC_BUFF=$(nextPowerOf2 $(getFileSize work/current.zip));
+$BIN_XDELTA -B ${SRC_BUFF} -9evfS none -s work/last.zip work/current.zip out/$FILE_LAST_BASE.update
+SRC_BUFF=$(nextPowerOf2 $(getFileSize work/current_signed.zip));
+$BIN_XDELTA -B ${SRC_BUFF} -9evfS none -s work/current.zip work/current_signed.zip out/$FILE_LAST_BASE.sign
 
 MD5_CURRENT=$(getFileMD5 $PATH_CURRENT/$FILE_CURRENT)
 MD5_CURRENT_STORE=$(getFileMD5 work/current.zip)
