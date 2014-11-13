@@ -16,7 +16,7 @@
         android:paddingLeft="16dp"
         android:paddingRight="16dp"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="@android:color/holo_blue_bright"
+        android:textColor="@android:color/holo_blue_dark"
         android:textSize="@dimen/TextLarger"
         android:fontFamily="sans-serif-light" />
 

@@ -7,7 +7,7 @@ LOCAL_PRIVILEGED_MODULE := true
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
-LOCAL_SDK_VERSION := 19
+LOCAL_SDK_VERSION := 21
 
 LOCAL_JNI_SHARED_LIBRARIES := libopendelta
 LOCAL_REQUIRED_MODULES := libopendelta
