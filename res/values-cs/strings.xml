@@ -40,4 +40,14 @@
   <string name="last_checked_never">Kontrola nebyla nikdy provedena, možná chcete provést kontrolu nyní ?</string>
   <string name="button_check_now">Zkontrolovat nyní &#8230;</string>
   <string name="button_flash_now">Aktualizovat nyní</string>
+  <string name="action_secure_mode">Zabezpečení</string>
+  <string name="secure_mode_enabled_title">Zabezpečený režim: povoleno</string>
+  <string name="secure_mode_enabled_description"><![CDATA[Před nahráním aktualizace bude ověřen digitální podpis pro ověření původu aktualizace. Tento režim je kompatibilní pouze s <b>TWRP</b>.]]></string>
+  <string name="secure_mode_disabled_title">Zabezpečený režim: zakázáno</string>
+  <string name="secure_mode_disabled_description"><![CDATA[Aktualizace budou nahrány do zařízení. Všimněte si, že jakákoliv škodlivá aplikace sem může umístit tyto aktualizace a získat plný přístup. Opatrnost je na místě.]]></string>
+  <string name="recovery_notice_title">Upozornění</string>
+  <string name="recovery_notice_description_secure"><![CDATA[Flashování aktualizací je v současném režimu podporováno pouze na <b>TWRP</b> recovery. Zkontrolujte prosím před spuštěním kompatibilitu recovery.]]></string>
+  <string name="recovery_notice_description_not_secure"><![CDATA[Flashování aktualizací je v současném režimu podporováno pouze na <b>TWRP</b> recovery.<i>Oficiální</i><b>CWM</b> vydání <i>není</i> podporováno, ale některé<i>neoficiální</i> verze <b>CWM</b><i>mohou</i> přesto pracovat správně. Zkontrolujte si prosím kompatibilitu recovery před spuštěním.]]></string>
+  <string name="flash_after_update_notice_title">Upozornění</string>
+  <string name="flash_after_update_notice_description"><![CDATA[Další aktualizace jsou přítomny ve složce <b>FlashAfterUpdate</b>, ale je povolen zabezpečený režim. Budete-li pokračovat, tyto další aktualizace se <b>nebudou</b> instalovat.]]></string>
 </resources>
