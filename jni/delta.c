@@ -62,6 +62,7 @@ int dedelta(char* filenameSource, char* filenameDelta, char* filenameOut) {
 		source.blksize = CHUNK;
 		source.curblkno = (xoff_t) -1;
 		source.curblk = bsource;
+		source.max_winsize = CHUNK;
 
 		ret = xd3_set_source (&stream, &source);
 
