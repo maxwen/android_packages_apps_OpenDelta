@@ -21,18 +21,19 @@
 
 package eu.chainfire.opendelta;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.res.Resources;
-import android.os.Environment;
-import android.preference.PreferenceManager;
-
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.os.Environment;
+import android.preference.PreferenceManager;
+import eu.chainfire.opendelta2.R;
 
 public class Config {
     private static Config instance = null;
@@ -64,6 +65,7 @@ public class Config {
     private final boolean secure_mode_enable;
     private final boolean secure_mode_default;
     private final boolean keep_screen_on;
+    private final String filename_base_prefix;
 
     /*
      * Using reflection voodoo instead calling the hidden class directly, to
@@ -92,10 +94,14 @@ public class Config {
         
         Resources res = context.getResources();
 
-        property_version = getProperty(context, res.getString(R.string.property_version), "");
+        // TODO fake
+        property_version ="5.1.1-20150630-find7-NIGHTLY";
+        //property_version = getProperty(context, res.getString(R.string.property_version), "");
         property_device = getProperty(context, res.getString(R.string.property_device), "");
         filename_base = String.format(Locale.ENGLISH, res.getString(R.string.filename_base),
                 property_version);
+        filename_base_prefix = String.format(Locale.ENGLISH, res.getString(R.string.filename_base),
+                "");
         path_base = String.format(Locale.ENGLISH, "%s%s%s%s", 
                 Environment.getExternalStorageDirectory().getAbsolutePath(), 
                 File.separator,
@@ -245,5 +251,17 @@ public class Config {
     
     public boolean getKeepScreenOn() {
         return keep_screen_on;
+    }
+    
+    public String getDevice() {
+        return property_device;
+    }
+    
+    public String getVersion() {
+        return property_version;
+    }
+    
+    public String getFileBaseNamePrefix() {
+        return filename_base_prefix;
     }
 }

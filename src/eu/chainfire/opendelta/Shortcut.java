@@ -1,8 +1,9 @@
 package eu.chainfire.opendelta;
 
 import android.app.Activity;
-import android.os.Bundle;
 import android.content.Intent;
+import android.os.Bundle;
+import eu.chainfire.opendelta2.R;
 
 public class Shortcut extends Activity {
 

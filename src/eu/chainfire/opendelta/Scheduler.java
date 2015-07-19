@@ -50,7 +50,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
-
 import eu.chainfire.opendelta.ScreenState.OnScreenStateListener;
 
 import java.text.SimpleDateFormat;

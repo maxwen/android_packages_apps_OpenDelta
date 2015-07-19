@@ -21,6 +21,11 @@
 
 package eu.chainfire.opendelta;
 
+import java.io.File;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -42,10 +47,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
+import eu.chainfire.opendelta2.R;
 
 public class MainActivity extends Activity {
     private TextView title = null;
@@ -53,6 +55,9 @@ public class MainActivity extends Activity {
     private ProgressBar progress = null;
     private Button checkNow = null;
     private Button flashNow = null;
+    private TextView extra = null;
+    private Button buildNow = null;
+    private boolean deltaUpdate = false;
     
     private Config config;
 
@@ -78,6 +83,8 @@ public class MainActivity extends Activity {
         progress = (ProgressBar) findViewById(R.id.progress);
         checkNow = (Button) findViewById(R.id.button_check_now);
         flashNow = (Button) findViewById(R.id.button_flash_now);
+        extra = (TextView) findViewById(R.id.text_extra);
+        buildNow = (Button) findViewById(R.id.button_build_delta);
         
         config = Config.getInstance(this);
     }
@@ -230,10 +237,14 @@ public class MainActivity extends Activity {
         public void onReceive(Context context, Intent intent) {
             String title = "";
             String sub = "";
+            String extraText = "";
             long current = 0L;
             long total = 1L;
             boolean enableCheck = false;
             boolean enableFlash = false;
+            boolean enableBuild = false;
+            boolean deltaUpdatePossible = false;
+            boolean fullUpdatePossible = false;
 
             String state = intent.getStringExtra(UpdateService.EXTRA_STATE);
             // don't try this at home
@@ -257,6 +268,11 @@ public class MainActivity extends Activity {
                 sub = getString(R.string.error_disk_space_sub, current, total);
             } else if (UpdateService.STATE_ERROR_UNKNOWN.equals(state)) {
                 enableCheck = true;
+            } else if (UpdateService.STATE_ERROR_UNOFFICIAL.equals(state)) {
+                enableCheck = true;
+                title = getString(R.string.state_error_not_official_title);
+                sub = getString(R.string.state_error_not_official_sub,
+                        intent.getStringExtra(UpdateService.EXTRA_FILENAME));
             } else if (UpdateService.STATE_ACTION_NONE.equals(state)) {
                 enableCheck = true;
                 sub = formatLastChecked(null, intent.getLongExtra(UpdateService.EXTRA_MS, 0));
@@ -265,6 +281,31 @@ public class MainActivity extends Activity {
                 enableFlash = true;
                 sub = formatLastChecked(intent.getStringExtra(UpdateService.EXTRA_FILENAME),
                         intent.getLongExtra(UpdateService.EXTRA_MS, 0));
+            } else if (UpdateService.STATE_ACTION_BUILD.equals(state)) {
+                enableCheck = true;
+                sub = String.format("%s", getString(R.string.last_checked,
+                        DateFormat.getDateFormat(MainActivity.this).format(intent.getLongExtra(UpdateService.EXTRA_MS, 0)),
+                        DateFormat.getTimeFormat(MainActivity.this).format(intent.getLongExtra(UpdateService.EXTRA_MS, 0))
+                        ));
+
+                final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+                final String latestFull = prefs.getString(UpdateService.PREF_LATEST_FULL_NAME, UpdateService.PREF_READY_FILENAME_DEFAULT);
+                final String latestDelta = prefs.getString(UpdateService.PREF_LATEST_DELTA_NAME, UpdateService.PREF_READY_FILENAME_DEFAULT);
+                deltaUpdatePossible = latestDelta != UpdateService.PREF_READY_FILENAME_DEFAULT;
+                fullUpdatePossible = latestFull != UpdateService.PREF_READY_FILENAME_DEFAULT;
+                
+                if (deltaUpdatePossible) {
+                    String latestDeltaBase = new File(latestDelta).getName();
+                    if (latestFull.equals(latestDeltaBase)) {
+                        enableBuild = true;
+                        deltaUpdate = true;
+                        extraText =  "Delta update to " + latestDeltaBase;
+                    }
+                }
+                if (fullUpdatePossible && !deltaUpdate){
+                    enableBuild = true;
+                    extraText =  "Full update to " + latestFull;
+                }
             } else {
                 current = intent.getLongExtra(UpdateService.EXTRA_CURRENT, current);
                 total = intent.getLongExtra(UpdateService.EXTRA_TOTAL, total);
@@ -307,12 +348,14 @@ public class MainActivity extends Activity {
 
             MainActivity.this.title.setText(title);
             MainActivity.this.sub.setText(sub);
+            MainActivity.this.extra.setText(extraText);
 
             progress.setProgress((int) current);
             progress.setMax((int) total);
 
-            checkNow.setVisibility(enableCheck ? View.VISIBLE : View.GONE);
-            flashNow.setVisibility(enableFlash ? View.VISIBLE : View.GONE);
+            checkNow.setEnabled(enableCheck ? true : false);
+            flashNow.setEnabled(enableFlash ? true : false);
+            buildNow.setEnabled(enableBuild ? true : false);
         }
     };
 
@@ -330,6 +373,14 @@ public class MainActivity extends Activity {
 
     public void onButtonCheckNowClick(View v) {
         UpdateService.startCheck(this);
+    }
+
+    public void onButtonBuildNowClick(View v) {
+        if (!deltaUpdate) {
+            UpdateService.startDownload(this);
+        } else {
+            UpdateService.startBuild(this);
+        }
     }
 
     public void onButtonFlashNowClick(View v) {
@@ -404,6 +455,7 @@ public class MainActivity extends Activity {
         public void run() {
             checkNow.setEnabled(false);
             flashNow.setEnabled(false);
+            buildNow.setEnabled(false);
             UpdateService.startFlash(MainActivity.this);
         }
     };
