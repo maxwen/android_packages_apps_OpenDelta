@@ -252,12 +252,15 @@ public class MainActivity extends Activity {
                 try {
                     title = getString(getResources().getIdentifier(
                             "state_" + state, "string", getPackageName()));
+                    extraText = getString(getResources().getIdentifier(
+                            "state_" + state + "_extra", "string", getPackageName()));
                 } catch (Exception e) {
                     // String for this state could not be found (displays empty string)
                     Logger.ex(e);                    
                 }
             }
 
+            Logger.d("onReceive : " + state);
             if (UpdateService.STATE_ERROR_DISK_SPACE.equals(state)) {
                 current = intent.getLongExtra(UpdateService.EXTRA_CURRENT, current);
                 total = intent.getLongExtra(UpdateService.EXTRA_TOTAL, total);
@@ -273,9 +276,14 @@ public class MainActivity extends Activity {
                 title = getString(R.string.state_error_not_official_title);
                 sub = getString(R.string.state_error_not_official_sub,
                         intent.getStringExtra(UpdateService.EXTRA_FILENAME));
+            } else if (UpdateService.STATE_ERROR_DOWNLOAD.equals(state)) {
+                enableCheck = true;
+                sub = intent.getStringExtra(UpdateService.EXTRA_FILENAME);
             } else if (UpdateService.STATE_ACTION_NONE.equals(state)) {
                 enableCheck = true;
                 sub = formatLastChecked(null, intent.getLongExtra(UpdateService.EXTRA_MS, 0));
+                extraText = String.format(Locale.ENGLISH, extraText,
+                		config.getFilenameBase());
             } else if (UpdateService.STATE_ACTION_READY.equals(state)) {
                 enableCheck = true;
                 enableFlash = true;
@@ -291,20 +299,29 @@ public class MainActivity extends Activity {
                 final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
                 final String latestFull = prefs.getString(UpdateService.PREF_LATEST_FULL_NAME, UpdateService.PREF_READY_FILENAME_DEFAULT);
                 final String latestDelta = prefs.getString(UpdateService.PREF_LATEST_DELTA_NAME, UpdateService.PREF_READY_FILENAME_DEFAULT);
-                deltaUpdatePossible = latestDelta != UpdateService.PREF_READY_FILENAME_DEFAULT;
-                fullUpdatePossible = latestFull != UpdateService.PREF_READY_FILENAME_DEFAULT;
+
+                String latestDeltaZip = latestDelta != UpdateService.PREF_READY_FILENAME_DEFAULT ? new File(latestDelta).getName() : null;
+                String latestFullZip = latestFull !=  UpdateService.PREF_READY_FILENAME_DEFAULT ? latestFull : null;
+                String currentVersionZip = config.getFilenameBase() +".zip";
+
+                deltaUpdatePossible = latestDeltaZip != null && latestDeltaZip.compareTo(currentVersionZip) == 1;
+                fullUpdatePossible = latestFullZip != null && latestFullZip.compareTo(currentVersionZip) == 1;
                 
                 if (deltaUpdatePossible) {
                     String latestDeltaBase = new File(latestDelta).getName();
                     if (latestFull.equals(latestDeltaBase)) {
                         enableBuild = true;
                         deltaUpdate = true;
-                        extraText =  "Delta update to " + latestDeltaBase;
+                        extraText = String.format(Locale.ENGLISH, extraText,
+                        		"Delta ",
+                        		latestDeltaBase);
                     }
                 }
                 if (fullUpdatePossible && !deltaUpdate){
                     enableBuild = true;
-                    extraText =  "Full update to " + latestFull;
+                    extraText = String.format(Locale.ENGLISH, extraText,
+                    		"Full ",
+                    		latestFull);
                 }
             } else {
                 current = intent.getLongExtra(UpdateService.EXTRA_CURRENT, current);
@@ -372,6 +389,7 @@ public class MainActivity extends Activity {
     }
 
     public void onButtonCheckNowClick(View v) {
+    	deltaUpdate = false;
         UpdateService.startCheck(this);
     }
 

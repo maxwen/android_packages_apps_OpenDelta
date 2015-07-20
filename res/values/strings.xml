@@ -60,5 +60,9 @@
 	<string name="state_error_not_official_sub" formatted="false">Update of unofficial build %s not supported</string>
 	<string name="button_build_delta">Download</string>
 	<string name="state_action_build">Update possible</string>
+	<string name="state_action_ready_extra">Ready to flash</string>
+	<string name="state_action_build_extra" formatted="false">%s update to %s</string>
+	<string name="state_action_none_extra" formatted="false">On %s</string>
+	<string name="state_error_download">Download problem</string>
 
 </resources>
