@@ -57,7 +57,6 @@ public class MainActivity extends Activity {
     private Button flashNow = null;
     private TextView extra = null;
     private Button buildNow = null;
-    private boolean deltaUpdate = false;
     
     private Config config;
 
@@ -309,15 +308,11 @@ public class MainActivity extends Activity {
                 
                 if (deltaUpdatePossible) {
                     String latestDeltaBase = new File(latestDelta).getName();
-                    if (latestFull.equals(latestDeltaBase)) {
-                        enableBuild = true;
-                        deltaUpdate = true;
-                        extraText = String.format(Locale.ENGLISH, extraText,
-                        		"Delta ",
-                        		latestDeltaBase);
-                    }
-                }
-                if (fullUpdatePossible && !deltaUpdate){
+                    enableBuild = true;
+                    extraText = String.format(Locale.ENGLISH, extraText,
+                        	"Delta ",
+                        	latestDeltaBase);
+                } else if (fullUpdatePossible){
                     enableBuild = true;
                     extraText = String.format(Locale.ENGLISH, extraText,
                     		"Full ",
@@ -371,8 +366,11 @@ public class MainActivity extends Activity {
             progress.setMax((int) total);
 
             checkNow.setEnabled(enableCheck ? true : false);
-            flashNow.setEnabled(enableFlash ? true : false);
             buildNow.setEnabled(enableBuild ? true : false);
+            flashNow.setEnabled(enableFlash ? true : false);
+
+            flashNow.setVisibility(enableFlash ? View.VISIBLE :View.GONE);
+            buildNow.setVisibility(!enableBuild || enableFlash ? View.GONE : View.VISIBLE);
         }
     };
 
@@ -389,16 +387,11 @@ public class MainActivity extends Activity {
     }
 
     public void onButtonCheckNowClick(View v) {
-    	deltaUpdate = false;
         UpdateService.startCheck(this);
     }
 
     public void onButtonBuildNowClick(View v) {
-        if (!deltaUpdate) {
-            UpdateService.startDownload(this);
-        } else {
-            UpdateService.startBuild(this);
-        }
+        UpdateService.startBuild(this);
     }
 
     public void onButtonFlashNowClick(View v) {
@@ -474,7 +467,13 @@ public class MainActivity extends Activity {
             checkNow.setEnabled(false);
             flashNow.setEnabled(false);
             buildNow.setEnabled(false);
-            UpdateService.startFlash(MainActivity.this);
+            // TODO
+            //UpdateService.startFlash(MainActivity.this);
         }
     };
+    
+    private void stopDownload() {
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        prefs.edit().putBoolean(UpdateService.PREF_STOP_DOWNLOAD, true).commit();
+    }
 }
