@@ -45,6 +45,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import eu.chainfire.opendelta2.R;
@@ -55,9 +56,13 @@ public class MainActivity extends Activity {
     private ProgressBar progress = null;
     private Button checkNow = null;
     private Button flashNow = null;
+    private TextView updateVersion = null;
     private TextView extra = null;
     private Button buildNow = null;
-    
+    private ImageButton stopNow = null;
+    private TextView currentVersion = null;
+    private TextView lastChecked = null;
+
     private Config config;
 
     @Override
@@ -82,8 +87,12 @@ public class MainActivity extends Activity {
         progress = (ProgressBar) findViewById(R.id.progress);
         checkNow = (Button) findViewById(R.id.button_check_now);
         flashNow = (Button) findViewById(R.id.button_flash_now);
+        updateVersion = (TextView) findViewById(R.id.text_update_version);
         extra = (TextView) findViewById(R.id.text_extra);
         buildNow = (Button) findViewById(R.id.button_build_delta);
+        stopNow = (ImageButton) findViewById(R.id.button_stop);
+        currentVersion = (TextView) findViewById(R.id.text_current_version);
+        lastChecked = (TextView) findViewById(R.id.text_last_checked);
         
         config = Config.getInstance(this);
     }
@@ -236,12 +245,15 @@ public class MainActivity extends Activity {
         public void onReceive(Context context, Intent intent) {
             String title = "";
             String sub = "";
+            String updateVersion = "";
+            String lastCheckedText = "Checking";
             String extraText = "";
             long current = 0L;
             long total = 1L;
             boolean enableCheck = false;
             boolean enableFlash = false;
             boolean enableBuild = false;
+            boolean enableStop = false;
             boolean deltaUpdatePossible = false;
             boolean fullUpdatePossible = false;
 
@@ -280,20 +292,19 @@ public class MainActivity extends Activity {
                 sub = intent.getStringExtra(UpdateService.EXTRA_FILENAME);
             } else if (UpdateService.STATE_ACTION_NONE.equals(state)) {
                 enableCheck = true;
-                sub = formatLastChecked(null, intent.getLongExtra(UpdateService.EXTRA_MS, 0));
+                lastCheckedText = formatLastChecked(null, intent.getLongExtra(UpdateService.EXTRA_MS, 0));
                 extraText = String.format(Locale.ENGLISH, extraText,
                 		config.getFilenameBase());
             } else if (UpdateService.STATE_ACTION_READY.equals(state)) {
                 enableCheck = true;
                 enableFlash = true;
-                sub = formatLastChecked(intent.getStringExtra(UpdateService.EXTRA_FILENAME),
+                lastCheckedText = formatLastChecked(intent.getStringExtra(UpdateService.EXTRA_FILENAME),
                         intent.getLongExtra(UpdateService.EXTRA_MS, 0));
             } else if (UpdateService.STATE_ACTION_BUILD.equals(state)) {
                 enableCheck = true;
-                sub = String.format("%s", getString(R.string.last_checked,
-                        DateFormat.getDateFormat(MainActivity.this).format(intent.getLongExtra(UpdateService.EXTRA_MS, 0)),
-                        DateFormat.getTimeFormat(MainActivity.this).format(intent.getLongExtra(UpdateService.EXTRA_MS, 0))
-                        ));
+                lastCheckedText = formatLastChecked(intent.getStringExtra(UpdateService.EXTRA_FILENAME),
+                        intent.getLongExtra(UpdateService.EXTRA_MS, 0));
+
 
                 final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
                 final String latestFull = prefs.getString(UpdateService.PREF_LATEST_FULL_NAME, UpdateService.PREF_READY_FILENAME_DEFAULT);
@@ -301,24 +312,23 @@ public class MainActivity extends Activity {
 
                 String latestDeltaZip = latestDelta != UpdateService.PREF_READY_FILENAME_DEFAULT ? new File(latestDelta).getName() : null;
                 String latestFullZip = latestFull !=  UpdateService.PREF_READY_FILENAME_DEFAULT ? latestFull : null;
-                String currentVersionZip = config.getFilenameBase() +".zip";
 
-                deltaUpdatePossible = latestDeltaZip != null && latestDeltaZip.compareTo(currentVersionZip) == 1;
-                fullUpdatePossible = latestFullZip != null && latestFullZip.compareTo(currentVersionZip) == 1;
+                deltaUpdatePossible = latestDeltaZip != null;
+                fullUpdatePossible = latestFullZip != null;
                 
                 if (deltaUpdatePossible) {
-                    String latestDeltaBase = new File(latestDelta).getName();
+                    String latestDeltaBase = new File(latestDelta).getName().substring(0, latestFull.lastIndexOf('.'));
                     enableBuild = true;
-                    extraText = String.format(Locale.ENGLISH, extraText,
-                        	"Delta ",
-                        	latestDeltaBase);
+                    updateVersion = latestDeltaBase;
                 } else if (fullUpdatePossible){
+                    String latestFullBase = latestFull.substring(0, latestFull.lastIndexOf('.'));
                     enableBuild = true;
-                    extraText = String.format(Locale.ENGLISH, extraText,
-                    		"Full ",
-                    		latestFull);
+                    updateVersion = latestFullBase;
                 }
             } else {
+            	if (UpdateService.STATE_ACTION_DOWNLOADING.equals(state)) {
+            		enableStop = true;
+            	}
                 current = intent.getLongExtra(UpdateService.EXTRA_CURRENT, current);
                 total = intent.getLongExtra(UpdateService.EXTRA_TOTAL, total);
 
@@ -360,7 +370,9 @@ public class MainActivity extends Activity {
 
             MainActivity.this.title.setText(title);
             MainActivity.this.sub.setText(sub);
-            MainActivity.this.extra.setText(extraText);
+            MainActivity.this.updateVersion.setText(updateVersion);
+            MainActivity.this.currentVersion.setText(config.getFilenameBase());
+            MainActivity.this.lastChecked.setText(lastCheckedText);
 
             progress.setProgress((int) current);
             progress.setMax((int) total);
@@ -371,6 +383,7 @@ public class MainActivity extends Activity {
 
             flashNow.setVisibility(enableFlash ? View.VISIBLE :View.GONE);
             buildNow.setVisibility(!enableBuild || enableFlash ? View.GONE : View.VISIBLE);
+            stopNow.setVisibility(enableStop ? View.VISIBLE :View.GONE);
         }
     };
 
@@ -398,6 +411,9 @@ public class MainActivity extends Activity {
         flashRecoveryWarning.run();
     }
     
+    public void onButtonStopClick(View v) {
+    	stopDownload();
+    }
     private Runnable flashRecoveryWarning = new Runnable() {        
         @Override
         public void run() {
@@ -474,6 +490,6 @@ public class MainActivity extends Activity {
     
     private void stopDownload() {
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        prefs.edit().putBoolean(UpdateService.PREF_STOP_DOWNLOAD, true).commit();
+        prefs.edit().putBoolean(UpdateService.PREF_STOP_DOWNLOAD, !prefs.getBoolean(UpdateService.PREF_STOP_DOWNLOAD, false)).commit();
     }
 }

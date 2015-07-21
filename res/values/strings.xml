@@ -37,6 +37,7 @@
 	<string name="state_error_unknown">Unknown error</string>
 	<string name="error_disk_space_sub" formatted="false">%d MiB available, %d MiB required</string>
 	<string name="notify_update_available">An update is available</string>
+	<string name="notify_update_to_available" formatted="false">Update %s available</string>
 	<string name="notify_checking">Checking for updates &#8230;</string>
 	<string name="last_checked" formatted="false">Last checked on %s at %s</string>
 	<string name="last_checked_never">We\'ve never checked, maybe you would like to do so ?</string>
@@ -57,12 +58,16 @@
 	<string name="flash_after_update_notice_description"><![CDATA[Additional updates are present in the <b>FlashAfterUpdate</b> folder, but secure mode is enabled. If you continue, these additional updates will <b>not</b> be flashed.]]></string>
 	<string name="official_version_tag">"NIGHTLY"</string>
 	<string name="state_error_not_official_title">Update disabled</string>
-	<string name="state_error_not_official_sub" formatted="false">Update of unofficial build %s not supported</string>
+	<string name="state_error_not_official_sub" formatted="false">Update of %s not possible</string>
 	<string name="button_build_delta">Download</string>
+	<string name="button_stop">Stop</string>
 	<string name="state_action_build">Update possible</string>
 	<string name="state_action_ready_extra">Ready to flash</string>
 	<string name="state_action_build_extra" formatted="false">%s update to %s</string>
 	<string name="state_action_none_extra" formatted="false">On %s</string>
 	<string name="state_error_download">Download problem</string>
+	<string name="text_current_version_header">Version</string>
+	<string name="text_last_checked_header">Last checked</string>
+	<string name="text_update_version">Update version</string>
 
 </resources>

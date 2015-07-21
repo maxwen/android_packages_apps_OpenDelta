@@ -21,6 +21,12 @@
 
 package eu.chainfire.opendelta;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.os.Environment;
+import android.preference.PreferenceManager;
+
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -28,11 +34,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.res.Resources;
-import android.os.Environment;
-import android.preference.PreferenceManager;
 import eu.chainfire.opendelta2.R;
 
 public class Config {
@@ -95,7 +96,7 @@ public class Config {
         Resources res = context.getResources();
 
         // TODO fake
-        property_version ="5.1.1-20150715-find7-NIGHTLY";
+        property_version ="5.1.1-20150630-find7-NIGHTLY";
         //property_version = getProperty(context, res.getString(R.string.property_version), "");
         property_device = getProperty(context, res.getString(R.string.property_device), "");
         filename_base = String.format(Locale.ENGLISH, res.getString(R.string.filename_base),
@@ -240,7 +241,7 @@ public class Config {
     public void setShownRecoveryWarningSecure() {
         prefs.edit().putBoolean(PREF_SHOWN_RECOVERY_WARNING_SECURE_NAME, true).commit();
     }
-    
+
     public boolean getShownRecoveryWarningNotSecure() {
         return prefs.getBoolean(PREF_SHOWN_RECOVERY_WARNING_NOT_SECURE_NAME, false);
     }
@@ -248,19 +249,19 @@ public class Config {
     public void setShownRecoveryWarningNotSecure() {
         prefs.edit().putBoolean(PREF_SHOWN_RECOVERY_WARNING_NOT_SECURE_NAME, true).commit();
     }
-    
+
     public boolean getKeepScreenOn() {
         return keep_screen_on;
     }
-    
+
     public String getDevice() {
         return property_device;
     }
-    
+
     public String getVersion() {
         return property_version;
     }
-    
+
     public String getFileBaseNamePrefix() {
         return filename_base_prefix;
     }
