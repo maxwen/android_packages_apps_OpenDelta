@@ -1,22 +1,25 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <item
-        android:id="@+id/action_networks"
-        android:orderInCategory="100"
-        android:showAsAction="never"
-        android:title="@string/action_networks" />
-
-   <item 
+	<item
+		android:id="@+id/action_networks"
+		android:orderInCategory="100"
+		android:showAsAction="never"
+		android:title="@string/action_networks"/>
+	<item
 		android:id="@+id/action_secure_mode"
-        android:orderInCategory="101"
-        android:showAsAction="never"
-        android:checkable="true"
-        android:title="@string/action_secure_mode" />
-   
-    <item
-        android:id="@+id/action_about"
-        android:orderInCategory="102"
-        android:showAsAction="never"
-        android:title="@string/action_about" />
+		android:checkable="true"
+		android:orderInCategory="101"
+		android:showAsAction="never"
+		android:title="@string/action_secure_mode"/>
+	<item
+		android:id="@+id/auto_download"
+		android:orderInCategory="100"
+		android:showAsAction="never"
+		android:title="@string/auto_download"/>
+	<item
+		android:id="@+id/action_about"
+		android:orderInCategory="102"
+		android:showAsAction="never"
+		android:title="@string/action_about"/>
 
 </menu>

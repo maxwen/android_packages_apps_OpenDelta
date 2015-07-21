@@ -39,7 +39,7 @@
 	<string name="notify_update_available">An update is available</string>
 	<string name="notify_update_to_available" formatted="false">Update %s available</string>
 	<string name="notify_checking">Checking for updates &#8230;</string>
-	<string name="last_checked" formatted="false">Last checked on %s at %s</string>
+	<string name="last_checked" formatted="false">On %s at %s</string>
 	<string name="last_checked_never">We\'ve never checked, maybe you would like to do so ?</string>
 	<string name="button_check_now">Check now &#8230;</string>
 	<string name="button_flash_now">Flash now</string>
@@ -62,12 +62,18 @@
 	<string name="button_build_delta">Download</string>
 	<string name="button_stop">Stop</string>
 	<string name="state_action_build">Update possible</string>
-	<string name="state_action_ready_extra">Ready to flash</string>
-	<string name="state_action_build_extra" formatted="false">%s update to %s</string>
-	<string name="state_action_none_extra" formatted="false">On %s</string>
+	<string name="state_action_build_delta">Delta update possible</string>
+	<string name="state_action_build_full">Full update possible</string>
 	<string name="state_error_download">Download problem</string>
-	<string name="text_current_version_header">Version</string>
-	<string name="text_last_checked_header">Last checked</string>
-	<string name="text_update_version">Update version</string>
+	<string name="text_current_version_header_title">Current version</string>
+	<string name="text_last_checked_header_title">Last checked</string>
+	<string name="text_update_version_title">Update version</string>
+	<string name="text_download_size_header_title">Download size</string>
+	<string name="text_download_size_unknown">Unknown</string>
+	<string name="auto_download">Downloads</string>
+	<string name="auto_download_title">Automatic downloads</string>
+	<string name="check_only">Check only</string>
+	<string name="download_delta">Delta updates only</string>
+	<string name="download_full">All updates</string>
 
 </resources>
