@@ -32,12 +32,12 @@
 	<string name="state_action_applying">Patching &#8230;</string>
 	<string name="state_action_applying_patch">Patching &#8230;</string>
 	<string name="state_action_applying_md5">Verifying file &#8230;</string>
-	<string name="state_action_ready">An update is available</string>
+	<string name="state_action_ready">Update ready to flash</string>
 	<string name="state_error_disk_space">Not enough disk space !</string>
 	<string name="state_error_unknown">Unknown error</string>
 	<string name="error_disk_space_sub" formatted="false">%d MiB available, %d MiB required</string>
-	<string name="notify_update_available">An update is available</string>
-	<string name="notify_update_to_available" formatted="false">Update %s available</string>
+	<string name="notify_update_to_available_download" formatted="false">Update %s available for downloading</string>
+	<string name="notify_update_to_available_flash" formatted="false">Update %s available for flashing</string>
 	<string name="notify_checking">Checking for updates &#8230;</string>
 	<string name="last_checked" formatted="false">On %s at %s</string>
 	<string name="last_checked_never">We\'ve never checked, maybe you would like to do so ?</string>
@@ -70,10 +70,11 @@
 	<string name="text_update_version_title">Update version</string>
 	<string name="text_download_size_header_title">Download size</string>
 	<string name="text_download_size_unknown">Unknown</string>
-	<string name="auto_download">Downloads</string>
-	<string name="auto_download_title">Automatic downloads</string>
-	<string name="check_only">Check only</string>
-	<string name="download_delta">Delta updates only</string>
-	<string name="download_full">All updates</string>
+	<string name="auto_download">Schedule</string>
+	<string name="auto_download_title">Scheduler actions</string>
+	<string name="download_disabled">Disabled</string>
+	<string name="check_only">Check and notify</string>
+	<string name="download_delta">Download delta updates</string>
+	<string name="download_full">Download all updates</string>
 
 </resources>

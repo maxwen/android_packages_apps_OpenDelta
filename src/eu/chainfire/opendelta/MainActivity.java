@@ -191,11 +191,12 @@ public class MainActivity extends Activity {
 
     private void showAutoDownload() {
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        int autoDownload = prefs.getInt(UpdateService.PREF_AUTO_DOWNLOAD, 0);
+        int autoDownload = prefs.getInt(UpdateService.PREF_AUTO_DOWNLOAD, UpdateService.PREF_AUTO_DOWNLOAD_DISABLED);
 
         (new AlertDialog.Builder(this)).
         setTitle(R.string.auto_download_title).
         setSingleChoiceItems(new CharSequence[] {
+                getString(R.string.download_disabled),
                 getString(R.string.check_only),
                 getString(R.string.download_delta),
                 getString(R.string.download_full),
@@ -520,8 +521,7 @@ public class MainActivity extends Activity {
             checkNow.setEnabled(false);
             flashNow.setEnabled(false);
             buildNow.setEnabled(false);
-            // TODO
-            //UpdateService.startFlash(MainActivity.this);
+            UpdateService.startFlash(MainActivity.this);
         }
     };
     

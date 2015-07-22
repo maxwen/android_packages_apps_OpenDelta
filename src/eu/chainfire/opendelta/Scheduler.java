@@ -81,6 +81,7 @@ public class Scheduler
     private PendingIntent alarmInterval = null;
     private PendingIntent alarmSecondaryWake = null;
     private PendingIntent alarmDetectSleep = null;
+    private boolean stopped;
 
     private SimpleDateFormat sdfLog = (new SimpleDateFormat("HH:mm", Locale.ENGLISH));
 
@@ -92,15 +93,7 @@ public class Scheduler
         alarmInterval = UpdateService.alarmPending(context, 1);
         alarmSecondaryWake = UpdateService.alarmPending(context, 2);
         alarmDetectSleep = UpdateService.alarmPending(context, 3);
-
-        alarmManager.setInexactRepeating(
-                AlarmManager.ELAPSED_REALTIME,
-                SystemClock.elapsedRealtime() + ALARM_INTERVAL_START,
-                ALARM_INTERVAL_INTERVAL,
-                alarmInterval
-        );
-
-        setSecondaryWakeAlarm();
+        stopped = true;
     }
 
     private void setSecondaryWakeAlarm() {
@@ -135,11 +128,13 @@ public class Scheduler
 
     @Override
     public void onScreenState(boolean state) {
-        if (!state) {
-            setDetectSleepAlarm();
-        } else {
-            cancelDetectSleepAlarm();
-        }
+    	if (!stopped) {
+    		if (!state) {
+    			setDetectSleepAlarm();
+    		} else {
+    			cancelDetectSleepAlarm();
+    		}
+    	}
     }
 
     private boolean checkForUpdates(boolean force) {
@@ -191,5 +186,26 @@ public class Scheduler
         // few hours
         cancelSecondaryWakeAlarm();
         setSecondaryWakeAlarm();
+    }
+    
+    public void stop() {
+    	Logger.i("Stopping scheduler");
+    	cancelSecondaryWakeAlarm();
+    	cancelDetectSleepAlarm();
+    	alarmManager.cancel(alarmInterval);
+    	stopped = true;
+    }
+    
+    public void start() {
+    	Logger.i("Starting scheduler");
+        alarmManager.setInexactRepeating(
+                AlarmManager.ELAPSED_REALTIME,
+                SystemClock.elapsedRealtime() + ALARM_INTERVAL_START,
+                ALARM_INTERVAL_INTERVAL,
+                alarmInterval
+        );
+
+        setSecondaryWakeAlarm();
+        stopped = false;
     }
 }
