@@ -44,6 +44,7 @@ import android.text.format.DateFormat;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -75,7 +76,6 @@ public class MainActivity extends Activity {
             // The standard Settings package is not present, so we can't snatch its icon
             Logger.ex(e);
         }
-
         getActionBar().setDisplayHomeAsUpEnabled(true);
 
         UpdateService.start(this);
@@ -84,7 +84,7 @@ public class MainActivity extends Activity {
 
         title = (TextView) findViewById(R.id.text_title);
         sub = (TextView) findViewById(R.id.text_sub);
-        progress = (ProgressBar) findViewById(R.id.progress);
+        progress = (ProgressBar) findViewById(R.id.progress_bar);
         checkNow = (Button) findViewById(R.id.button_check_now);
         flashNow = (Button) findViewById(R.id.button_flash_now);
         updateVersion = (TextView) findViewById(R.id.text_update_version);
@@ -285,6 +285,7 @@ public class MainActivity extends Activity {
             boolean enableStop = false;
             boolean deltaUpdatePossible = false;
             boolean fullUpdatePossible = false;
+            boolean enableProgress = false;
 
             String state = intent.getStringExtra(UpdateService.EXTRA_STATE);
             // don't try this at home
@@ -292,8 +293,6 @@ public class MainActivity extends Activity {
                 try {
                     title = getString(getResources().getIdentifier(
                             "state_" + state, "string", getPackageName()));
-                    extraText = getString(getResources().getIdentifier(
-                            "state_" + state + "_extra", "string", getPackageName()));
                 } catch (Exception e) {
                     // String for this state could not be found (displays empty string)
                     Logger.ex(e);                    
@@ -302,29 +301,36 @@ public class MainActivity extends Activity {
 
             //Logger.d("onReceive : " + state);
             if (UpdateService.STATE_ERROR_DISK_SPACE.equals(state)) {
+                enableCheck = true;
+                progress.setIndeterminate(false);
                 current = intent.getLongExtra(UpdateService.EXTRA_CURRENT, current);
                 total = intent.getLongExtra(UpdateService.EXTRA_TOTAL, total);
 
                 current /= 1024L * 1024L;
                 total /= 1024L * 1024L;
 
-                sub = getString(R.string.error_disk_space_sub, current, total);
+                extraText = getString(R.string.error_disk_space_sub, current, total);
             } else if (UpdateService.STATE_ERROR_UNKNOWN.equals(state)) {
                 enableCheck = true;
+                progress.setIndeterminate(false);
             } else if (UpdateService.STATE_ERROR_UNOFFICIAL.equals(state)) {
                 enableCheck = true;
+                progress.setIndeterminate(false);
                 title = getString(R.string.state_error_not_official_title);
-                sub = getString(R.string.state_error_not_official_sub,
+                extraText = getString(R.string.state_error_not_official_extra,
                         intent.getStringExtra(UpdateService.EXTRA_FILENAME));
             } else if (UpdateService.STATE_ERROR_DOWNLOAD.equals(state)) {
                 enableCheck = true;
-                sub = intent.getStringExtra(UpdateService.EXTRA_FILENAME);
+                progress.setIndeterminate(false);
+                extraText = intent.getStringExtra(UpdateService.EXTRA_FILENAME);
             } else if (UpdateService.STATE_ACTION_NONE.equals(state)) {
                 enableCheck = true;
+                progress.setIndeterminate(false);
                 lastCheckedText = formatLastChecked(null, intent.getLongExtra(UpdateService.EXTRA_MS, 0));
             } else if (UpdateService.STATE_ACTION_READY.equals(state)) {
                 enableCheck = true;
                 enableFlash = true;
+                progress.setIndeterminate(false);
                 lastCheckedText = formatLastChecked(null,
                         intent.getLongExtra(UpdateService.EXTRA_MS, 0));
 
@@ -336,6 +342,7 @@ public class MainActivity extends Activity {
                 }
             } else if (UpdateService.STATE_ACTION_BUILD.equals(state)) {
                 enableCheck = true;
+                progress.setIndeterminate(false);
                 lastCheckedText = formatLastChecked(null,
                         intent.getLongExtra(UpdateService.EXTRA_MS, 0));
 
@@ -348,7 +355,7 @@ public class MainActivity extends Activity {
 
                 deltaUpdatePossible = latestDeltaZip != null;
                 fullUpdatePossible = latestFullZip != null;
-                
+
                 if (deltaUpdatePossible) {
                     String latestDeltaBase = latestDelta.substring(0, latestFull.lastIndexOf('.'));
                     enableBuild = true;
@@ -361,12 +368,19 @@ public class MainActivity extends Activity {
                     title = getString(R.string.state_action_build_full);
                 }
                 downloadSizeText = prefs.getString(UpdateService.PREF_DOWNLOAD_SIZE, "");
+            } else if (UpdateService.STATE_ACTION_SEARCHING.equals(state) ||
+                    UpdateService.STATE_ACTION_CHECKING.equals(state)) {
+                enableProgress = true;
+                progress.setIndeterminate(true);
+                current = 1;
             } else {
-            	if (UpdateService.STATE_ACTION_DOWNLOADING.equals(state)) {
-            		enableStop = true;
-            	}
+                enableProgress = true;
+                if (UpdateService.STATE_ACTION_DOWNLOADING.equals(state)) {
+                    enableStop = true;
+                }
                 current = intent.getLongExtra(UpdateService.EXTRA_CURRENT, current);
                 total = intent.getLongExtra(UpdateService.EXTRA_TOTAL, total);
+                progress.setIndeterminate(false);
 
                 // long --> int overflows FTL (progress.setXXX)
                 boolean progressInK = false;
@@ -414,6 +428,8 @@ public class MainActivity extends Activity {
 
             progress.setProgress((int) current);
             progress.setMax((int) total);
+            progress.setVisibility(!enableProgress ? View.INVISIBLE : View.VISIBLE);
+            MainActivity.this.sub.setVisibility(!enableProgress ? View.GONE : View.VISIBLE);
 
             checkNow.setEnabled(enableCheck ? true : false);
             buildNow.setEnabled(enableBuild ? true : false);
@@ -450,7 +466,7 @@ public class MainActivity extends Activity {
     }
     
     public void onButtonStopClick(View v) {
-    	stopDownload();
+        stopDownload();
     }
     private Runnable flashRecoveryWarning = new Runnable() {        
         @Override
@@ -524,7 +540,7 @@ public class MainActivity extends Activity {
             UpdateService.startFlash(MainActivity.this);
         }
     };
-    
+
     private void stopDownload() {
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         prefs.edit().putBoolean(UpdateService.PREF_STOP_DOWNLOAD, !prefs.getBoolean(UpdateService.PREF_STOP_DOWNLOAD, false)).commit();

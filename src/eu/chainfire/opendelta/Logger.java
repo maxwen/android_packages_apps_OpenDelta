@@ -24,7 +24,7 @@ package eu.chainfire.opendelta;
 import java.util.Locale;
 
 public class Logger {
-    private final static String LOG_TAG = "OpenDelta2";
+    private final static String LOG_TAG = "OpenDelta";
     
     private static boolean log = false;
 

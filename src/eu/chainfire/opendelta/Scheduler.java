@@ -57,8 +57,8 @@ import java.util.Date;
 import java.util.Locale;
 
 public class Scheduler
-        implements
-        OnScreenStateListener
+implements
+OnScreenStateListener
 {
     public interface OnWantUpdateCheckListener {
         public boolean onWantUpdateCheck();
@@ -103,7 +103,7 @@ public class Scheduler
                 AlarmManager.ELAPSED_REALTIME_WAKEUP,
                 SystemClock.elapsedRealtime() + ALARM_SECONDARY_WAKEUP_TIME,
                 alarmSecondaryWake
-        );
+                );
     }
 
     private void cancelSecondaryWakeAlarm() {
@@ -118,7 +118,7 @@ public class Scheduler
                 AlarmManager.ELAPSED_REALTIME_WAKEUP,
                 SystemClock.elapsedRealtime() + ALARM_DETECT_SLEEP_TIME,
                 alarmDetectSleep
-        );
+                );
     }
 
     private void cancelDetectSleepAlarm() {
@@ -128,13 +128,13 @@ public class Scheduler
 
     @Override
     public void onScreenState(boolean state) {
-    	if (!stopped) {
-    		if (!state) {
-    			setDetectSleepAlarm();
-    		} else {
-    			cancelDetectSleepAlarm();
-    		}
-    	}
+        if (!stopped) {
+            if (!state) {
+                setDetectSleepAlarm();
+            } else {
+                cancelDetectSleepAlarm();
+            }
+        }
     }
 
     private boolean checkForUpdates(boolean force) {
@@ -146,8 +146,8 @@ public class Scheduler
             if (onWantUpdateCheckListener != null) {
                 if (onWantUpdateCheckListener.onWantUpdateCheck()) {
                     prefs.edit()
-                            .putLong(PREF_LAST_CHECK_ATTEMPT_TIME_NAME, System.currentTimeMillis())
-                            .commit();
+                    .putLong(PREF_LAST_CHECK_ATTEMPT_TIME_NAME, System.currentTimeMillis())
+                    .commit();
                 }
             }
         }
@@ -156,30 +156,30 @@ public class Scheduler
 
     public void alarm(int id) {
         switch (id) {
-            case 1:
-                // This is the interval alarm, called only if the device is
-                // already awake for some reason. Might as well see if
-                // conditions match to check for updates, right ?
-                Logger.i("Interval alarm fired");
-                checkForUpdates(false);
-                break;
+        case 1:
+            // This is the interval alarm, called only if the device is
+            // already awake for some reason. Might as well see if
+            // conditions match to check for updates, right ?
+            Logger.i("Interval alarm fired");
+            checkForUpdates(false);
+            break;
 
-            case 2:
-                // Fallback alarm. Our interval alarm has not been called for
-                // several hours. The device might have been woken up just
-                // for us. Let's see if conditions are good to check for
-                // updates.
-                Logger.i("Secondary alarm fired");
-                checkForUpdates(false);
-                break;
+        case 2:
+            // Fallback alarm. Our interval alarm has not been called for
+            // several hours. The device might have been woken up just
+            // for us. Let's see if conditions are good to check for
+            // updates.
+            Logger.i("Secondary alarm fired");
+            checkForUpdates(false);
+            break;
 
-            case 3:
-                // The screen has been off for 5:30 hours, with luck we've
-                // caught the user asleep and we'll have a fresh build waiting
-                // when (s)he wakes!
-                Logger.i("Sleep detection alarm fired");
-                checkForUpdates(true);
-                break;
+        case 3:
+            // The screen has been off for 5:30 hours, with luck we've
+            // caught the user asleep and we'll have a fresh build waiting
+            // when (s)he wakes!
+            Logger.i("Sleep detection alarm fired");
+            checkForUpdates(true);
+            break;
         }
 
         // Reset fallback wakeup command, we don't need to be called for another
@@ -187,23 +187,23 @@ public class Scheduler
         cancelSecondaryWakeAlarm();
         setSecondaryWakeAlarm();
     }
-    
+
     public void stop() {
-    	Logger.i("Stopping scheduler");
-    	cancelSecondaryWakeAlarm();
-    	cancelDetectSleepAlarm();
-    	alarmManager.cancel(alarmInterval);
-    	stopped = true;
+        Logger.i("Stopping scheduler");
+        cancelSecondaryWakeAlarm();
+        cancelDetectSleepAlarm();
+        alarmManager.cancel(alarmInterval);
+        stopped = true;
     }
-    
+
     public void start() {
-    	Logger.i("Starting scheduler");
+        Logger.i("Starting scheduler");
         alarmManager.setInexactRepeating(
                 AlarmManager.ELAPSED_REALTIME,
                 SystemClock.elapsedRealtime() + ALARM_INTERVAL_START,
                 ALARM_INTERVAL_INTERVAL,
                 alarmInterval
-        );
+                );
 
         setSecondaryWakeAlarm();
         stopped = false;
