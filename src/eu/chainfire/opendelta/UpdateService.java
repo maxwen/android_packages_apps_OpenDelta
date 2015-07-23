@@ -262,7 +262,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
 
 
         scheduler = new Scheduler(this, this);
-        int autoDownload = prefs.getInt(PREF_AUTO_DOWNLOAD, PREF_AUTO_DOWNLOAD_DISABLED);
+        int autoDownload = prefs.getInt(PREF_AUTO_DOWNLOAD, PREF_AUTO_DOWNLOAD_CHECK);
         if (autoDownload != PREF_AUTO_DOWNLOAD_DISABLED) {
             scheduler.start();
         }
@@ -295,7 +295,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        int autoDownload = prefs.getInt(PREF_AUTO_DOWNLOAD, PREF_AUTO_DOWNLOAD_DISABLED);
+        //int autoDownload = prefs.getInt(PREF_AUTO_DOWNLOAD, PREF_AUTO_DOWNLOAD_DISABLED);
 
         if (intent != null) {
             if (ACTION_CHECK.equals(intent.getAction())) {
@@ -305,13 +305,14 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             } else if (ACTION_ALARM.equals(intent.getAction())) {
                 scheduler.alarm(intent.getIntExtra(EXTRA_ALARM_ID, -1));
                 // TODO - hmmmm - why?
-                autoState(false, autoDownload);
+                //autoState(false, autoDownload);
             } else if (ACTION_NOTIFICATION_DELETED.equals(intent.getAction())) {
-                Logger.i("Snoozing for 24 hours");
+                Logger.i("Snoozing notification");
                 prefs.edit()
                 .putLong(PREF_LAST_SNOOZE_TIME_NAME,
                         System.currentTimeMillis()).commit();
-                autoState(false, autoDownload);
+                // TODO - hmmmm - why?
+                //autoState(false, autoDownload);
             } else if (ACTION_BUILD.equals(intent.getAction())) {
                 checkForUpdates(true, PREF_AUTO_DOWNLOAD_FULL);
             }
@@ -359,7 +360,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
     @Override
     public boolean onWantUpdateCheck() {
         Logger.i("Scheduler requests check for updates");
-        int autoDownload = prefs.getInt(PREF_AUTO_DOWNLOAD, PREF_AUTO_DOWNLOAD_DISABLED);
+        int autoDownload = prefs.getInt(PREF_AUTO_DOWNLOAD, PREF_AUTO_DOWNLOAD_CHECK);
         if (autoDownload != PREF_AUTO_DOWNLOAD_DISABLED) {
             return checkForUpdates(false, autoDownload);
         }
@@ -381,7 +382,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             stopDownload = true;
         }
         if (PREF_AUTO_DOWNLOAD.equals(key)) {
-            int autoDownload = sharedPreferences.getInt(PREF_AUTO_DOWNLOAD, PREF_AUTO_DOWNLOAD_DISABLED);
+            int autoDownload = sharedPreferences.getInt(PREF_AUTO_DOWNLOAD, PREF_AUTO_DOWNLOAD_CHECK);
             if (autoDownload == PREF_AUTO_DOWNLOAD_DISABLED) {
                 scheduler.stop();
             } else {
@@ -402,13 +403,17 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                         PREF_READY_FILENAME_DEFAULT).commit();
             }
         }
-        if (this.state == STATE_ERROR_DOWNLOAD) {
+        // dont change state if we are in an error one
+        if (this.state == STATE_ERROR_DOWNLOAD ||
+        		this.state == STATE_ERROR_DISK_SPACE ||
+        		this.state == STATE_ERROR_UNKNOWN ||
+        		this.state == STATE_ERROR_UNOFFICIAL) {
             return;
         }
         boolean updateAvilable = updateAvailable();
         // if the file has been downloaded or creates anytime before
         // this will aways be more important
-        if (checkOnly == 1 && filename == null) {
+        if (checkOnly == PREF_AUTO_DOWNLOAD_CHECK && filename == null) {
             Logger.i("Checking step done");
             if (!updateAvilable) {
                 Logger.i("System up to date");
@@ -637,8 +642,8 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             updateState(STATE_ACTION_DOWNLOADING, 0f, 0L, 0L, f.getName(), null);
 
             HttpParams params = new BasicHttpParams();
-            //HttpConnectionParams.setConnectionTimeout(params, 10000);
-            //HttpConnectionParams.setSoTimeout(params, 10000);
+            HttpConnectionParams.setConnectionTimeout(params, 10000);
+            HttpConnectionParams.setSoTimeout(params, 10000);
             HttpClient client = new DefaultHttpClient(params);
             HttpGet request = new HttpGet(url);
             HttpResponse response = client.execute(request);
@@ -1694,7 +1699,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                         Logger.d("check donne: latest full build available = " + prefs.getString(PREF_LATEST_FULL_NAME, PREF_READY_FILENAME_DEFAULT) +
                                 " : updateAvilable = " + updateAvilable + " : downloadFullBuild = " + downloadFullBuild);
 
-                        if (checkOnly == 1) {
+                        if (checkOnly == PREF_AUTO_DOWNLOAD_CHECK) {
                             return;
                         }
                     } else {
@@ -1771,7 +1776,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                                 " : latest full build available = " + prefs.getString(PREF_LATEST_FULL_NAME, PREF_READY_FILENAME_DEFAULT) +
                                 " : updateAvilable = " + updateAvilable + " : downloadFullBuild = " + downloadFullBuild);
 
-                        if (checkOnly == 1) {
+                        if (checkOnly == PREF_AUTO_DOWNLOAD_CHECK) {
                             return;
                         }
 
@@ -1786,7 +1791,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
 
                         long downloadSize = downloadFullBuild ? fullDownloadSize : deltaDownloadSize;
 
-                        if (!downloadFullBuild && checkOnly > 1) {
+                        if (!downloadFullBuild && checkOnly > PREF_AUTO_DOWNLOAD_CHECK) {
                             // Download all the files we do not have yet
                             if (!downloadFiles(deltas, false, downloadSize, force))
                                 return;
@@ -1821,7 +1826,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                             prefs.edit().putString(PREF_READY_FILENAME_NAME, flashFilename).commit();
                         }
                     }
-                    if (downloadFullBuild && checkOnly == 3) {
+                    if (downloadFullBuild && checkOnly == PREF_AUTO_DOWNLOAD_FULL) {
                         if (force || networkState.getState()) {
                             String md5Url = latestFullFetch + ".md5sum";
                             String latestFullMd5 = downloadUrlMemoryAsString(md5Url);

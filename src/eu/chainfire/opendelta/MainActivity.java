@@ -191,7 +191,7 @@ public class MainActivity extends Activity {
 
     private void showAutoDownload() {
         final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        int autoDownload = prefs.getInt(UpdateService.PREF_AUTO_DOWNLOAD, UpdateService.PREF_AUTO_DOWNLOAD_DISABLED);
+        int autoDownload = prefs.getInt(UpdateService.PREF_AUTO_DOWNLOAD, UpdateService.PREF_AUTO_DOWNLOAD_CHECK);
 
         (new AlertDialog.Builder(this)).
         setTitle(R.string.auto_download_title).
