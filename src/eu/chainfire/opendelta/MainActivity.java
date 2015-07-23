@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2013-2014 Jorrit "Chainfire" Jongma
- * Copyright (C) 2013-2014 The OmniROM Project
+ * Copyright (C) 2013-2015 The OmniROM Project
  */
 /* 
  * This file is part of OpenDelta.
@@ -83,7 +83,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         title = (TextView) findViewById(R.id.text_title);
-        sub = (TextView) findViewById(R.id.text_sub);
+        sub = (TextView) findViewById(R.id.progress_text);
         progress = (ProgressBar) findViewById(R.id.progress_bar);
         checkNow = (Button) findViewById(R.id.button_check_now);
         flashNow = (Button) findViewById(R.id.button_flash_now);
@@ -395,7 +395,7 @@ public class MainActivity extends Activity {
                     long ms = intent.getLongExtra(UpdateService.EXTRA_MS, 0);
 
                     if ((ms <= 500) || (current <= 0) || (total <= 0)) {
-                        sub = String.format(Locale.ENGLISH, "%s\n%.0f %%", filename,
+                        sub = String.format(Locale.ENGLISH, "%s %.0f %%", filename,
                                 intent.getFloatExtra(UpdateService.EXTRA_PROGRESS, 0));
                     } else {
                         float kibps = ((float) current / 1024f) / ((float) ms / 1000f);
@@ -405,12 +405,12 @@ public class MainActivity extends Activity {
 
                         if (kibps < 10000) {
                             sub = String.format(Locale.ENGLISH,
-                                    "%s\n%.0f %%, %.0f KiB/s, %02d:%02d", filename,
+                                    "%s %.0f %%, %.0f KiB/s, %02d:%02d", filename,
                                     intent.getFloatExtra(UpdateService.EXTRA_PROGRESS, 0), kibps,
                                     sec / 60, sec % 60);
                         } else {
                             sub = String.format(Locale.ENGLISH,
-                                    "%s\n%.0f %%, %.0f MiB/s, %02d:%02d", filename,
+                                    "%s %.0f %%, %.0f MiB/s, %02d:%02d", filename,
                                     intent.getFloatExtra(UpdateService.EXTRA_PROGRESS, 0),
                                     kibps / 1024f, sec / 60, sec % 60);
                         }
@@ -429,7 +429,7 @@ public class MainActivity extends Activity {
             progress.setProgress((int) current);
             progress.setMax((int) total);
             progress.setVisibility(!enableProgress ? View.INVISIBLE : View.VISIBLE);
-            MainActivity.this.sub.setVisibility(!enableProgress ? View.GONE : View.VISIBLE);
+            MainActivity.this.sub.setVisibility(!enableProgress ? View.INVISIBLE : View.VISIBLE);
 
             checkNow.setEnabled(enableCheck ? true : false);
             buildNow.setEnabled(enableBuild ? true : false);

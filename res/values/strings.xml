@@ -76,6 +76,5 @@
 	<string name="check_only">Check and notify</string>
 	<string name="download_delta">Download delta updates</string>
 	<string name="download_full">Download all updates</string>
-	<string name="text_sub_header_title">Status</string>
 
 </resources>

@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2013-2014 Jorrit "Chainfire" Jongma
- * Copyright (C) 2013-2014 The OmniROM Project
+ * Copyright (C) 2013-2015 The OmniROM Project
  */
 /* 
  * This file is part of OpenDelta.
@@ -426,7 +426,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                 updateState(STATE_ACTION_BUILD, null, null, null, null,
                         prefs.getLong(PREF_LAST_CHECK_TIME_NAME,
                                 PREF_LAST_CHECK_TIME_DEFAULT));
-                // TODO check if we're snoozed, using abs for clock changes
+                // check if we're snoozed, using abs for clock changes
                 if (Math.abs(System.currentTimeMillis()
                         - prefs.getLong(PREF_LAST_SNOOZE_TIME_NAME,
                                 PREF_LAST_SNOOZE_TIME_DEFAULT)) > SNOOZE_MS) {
@@ -450,7 +450,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                     filename)).getName(), prefs.getLong(
                             PREF_LAST_CHECK_TIME_NAME, PREF_LAST_CHECK_TIME_DEFAULT));
 
-            // TODO check if we're snoozed, using abs for clock changes
+            // check if we're snoozed, using abs for clock changes
             if (Math.abs(System.currentTimeMillis()
                     - prefs.getLong(PREF_LAST_SNOOZE_TIME_NAME,
                             PREF_LAST_SNOOZE_TIME_DEFAULT)) > SNOOZE_MS) {
@@ -752,7 +752,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                     }
                 }
             }
-            // TODO assumed its always sorted
+            // assumed its always sorted
             if (buildNames.size() > 0) {
                 return buildNames.get(buildNames.size() - 1);
             }
