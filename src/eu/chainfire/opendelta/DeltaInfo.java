@@ -152,6 +152,20 @@ public class DeltaInfo {
             }
             return null;
         }
+
+        public boolean isOfficialFile(File f) {
+            if (f.exists()) {
+                return f.length() == getOfficial().getSize();
+            }
+            return false;
+        }
+
+        public boolean isSignedFile(File f) {
+            if (f.exists()) {
+                return f.length() == getStoreSigned().getSize();
+            }
+            return false;
+        }
     }
 
     private final int version;

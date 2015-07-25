@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -78,7 +79,6 @@ import eu.chainfire.opendelta.DeltaInfo.ProgressListener;
 import eu.chainfire.opendelta.NetworkState.OnNetworkStateListener;
 import eu.chainfire.opendelta.Scheduler.OnWantUpdateCheckListener;
 import eu.chainfire.opendelta.ScreenState.OnScreenStateListener;
-import eu.chainfire.opendelta.R;
 
 public class UpdateService extends Service implements OnNetworkStateListener,
 OnBatteryStateListener, OnScreenStateListener,
@@ -97,6 +97,10 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
 
     public static void startBuild(Context context) {
         start(context, ACTION_BUILD);
+    }
+
+    public static void startUpdate(Context context) {
+        start(context, ACTION_UPDATE);
     }
 
     private static void start(Context context, String action) {
@@ -124,7 +128,6 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
     public static final String EXTRA_TOTAL = "eu.chainfire.opendelta.extra.TOTAL";
     public static final String EXTRA_FILENAME = "eu.chainfire.opendelta.extra.FILENAME";
     public static final String EXTRA_MS = "eu.chainfire.opendelta.extra.MS";
-    public static final String EXTRA_SIZE = "eu.chainfire.opendelta.extra.SIZE";
 
     public static final String STATE_ACTION_NONE = "action_none";
     public static final String STATE_ACTION_CHECKING = "action_checking";
@@ -148,6 +151,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
     private static final String EXTRA_ALARM_ID = "eu.chainfire.opendelta.extra.ALARM_ID";
     private static final String ACTION_NOTIFICATION_DELETED = "eu.chainfire.opendelta.action.NOTIFICATION_DELETED";
     private static final String ACTION_BUILD = "eu.chainfire.opendelta.action.BUILD";
+    private static final String ACTION_UPDATE = "eu.chainfire.opendelta.action.UPDATE";
 
     private static final int NOTIFICATION_BUSY = 1;
     private static final int NOTIFICATION_UPDATE = 2;
@@ -171,22 +175,13 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
     public static final String PREF_LATEST_DELTA_NAME = "latest_delta_name";
     public static final String PREF_STOP_DOWNLOAD = "stop_download";
     public static final String PREF_DOWNLOAD_SIZE = "download_size";
+    public static final String PREF_DELTA_SIGNATURE = "delta_signature";
 
-    public static final String PREF_AUTO_DOWNLOAD = "auto_download";
     public static final int PREF_AUTO_DOWNLOAD_DISABLED = 0;
+    public static final String PREF_AUTO_DOWNLOAD_CHECK_STRING = String.valueOf(PREF_AUTO_DOWNLOAD_DISABLED);
     public static final int PREF_AUTO_DOWNLOAD_CHECK = 1;
     public static final int PREF_AUTO_DOWNLOAD_DELTA = 2;
     public static final int PREF_AUTO_DOWNLOAD_FULL = 3;
-
-    public static boolean isStateBusy(String state) {
-        return !(state.equals(STATE_ACTION_NONE)
-                || state.equals(STATE_ACTION_READY)
-                || state.equals(STATE_ERROR_UNKNOWN)
-                || state.equals(STATE_ERROR_DISK_SPACE)
-                || state.equals(STATE_ERROR_UNOFFICIAL)
-                || state.equals(STATE_ACTION_BUILD)
-                || state.equals(STATE_ERROR_DOWNLOAD));
-    }
 
     private Config config;
 
@@ -206,6 +201,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
 
     private NotificationManager notificationManager = null;
     private boolean stopDownload;
+    private boolean updateRunning;
     private SharedPreferences prefs = null;
 
     /*
@@ -260,9 +256,8 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-
         scheduler = new Scheduler(this, this);
-        int autoDownload = prefs.getInt(PREF_AUTO_DOWNLOAD, PREF_AUTO_DOWNLOAD_CHECK);
+        int autoDownload = getAutoDownloadValue();
         if (autoDownload != PREF_AUTO_DOWNLOAD_DISABLED) {
             scheduler.start();
         }
@@ -272,14 +267,16 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                 PREF_AUTO_UPDATE_NETWORKS_DEFAULT));
 
         batteryState = new BatteryState();
-        batteryState.start(this, this, 50, true);
+        batteryState.start(this, this,
+                Integer.valueOf(prefs.getString(SettingsActivity.PREF_BATTERY_LEVEL, "50")).intValue(),
+                prefs.getBoolean(SettingsActivity.PREF_CHARGE_ONLY, true));
 
         screenState = new ScreenState();
         screenState.start(this, this);
 
         prefs.registerOnSharedPreferenceChangeListener(this);
 
-        autoState(false, 1);
+        autoState(false, PREF_AUTO_DOWNLOAD_CHECK);
     }
 
     @Override
@@ -304,8 +301,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                 flashUpdate();
             } else if (ACTION_ALARM.equals(intent.getAction())) {
                 scheduler.alarm(intent.getIntExtra(EXTRA_ALARM_ID, -1));
-                // TODO - hmmmm - why?
-                //autoState(false, autoDownload);
+                autoState(false, PREF_AUTO_DOWNLOAD_CHECK);
             } else if (ACTION_NOTIFICATION_DELETED.equals(intent.getAction())) {
                 Logger.i("Snoozing notification");
                 prefs.edit()
@@ -315,6 +311,8 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                 //autoState(false, autoDownload);
             } else if (ACTION_BUILD.equals(intent.getAction())) {
                 checkForUpdates(true, PREF_AUTO_DOWNLOAD_FULL);
+            } else if (ACTION_UPDATE.equals(intent.getAction())) {
+                autoState(false, PREF_AUTO_DOWNLOAD_CHECK);
             }
         }
 
@@ -360,7 +358,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
     @Override
     public boolean onWantUpdateCheck() {
         Logger.i("Scheduler requests check for updates");
-        int autoDownload = prefs.getInt(PREF_AUTO_DOWNLOAD, PREF_AUTO_DOWNLOAD_CHECK);
+        int autoDownload = getAutoDownloadValue();
         if (autoDownload != PREF_AUTO_DOWNLOAD_DISABLED) {
             return checkForUpdates(false, autoDownload);
         }
@@ -370,7 +368,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
             String key) {
-        Logger.d("onSharedPreferenceChanged");
+        Logger.d("onSharedPreferenceChanged " + key);
 
         if (PREF_AUTO_UPDATE_NETWORKS_NAME.equals(key)) {
             networkState.updateFlags(sharedPreferences.getInt(
@@ -378,20 +376,24 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                     PREF_AUTO_UPDATE_NETWORKS_DEFAULT));
         }
         if (PREF_STOP_DOWNLOAD.equals(key)) {
-            Logger.d("stopDownload");
             stopDownload = true;
         }
-        if (PREF_AUTO_DOWNLOAD.equals(key)) {
-            int autoDownload = sharedPreferences.getInt(PREF_AUTO_DOWNLOAD, PREF_AUTO_DOWNLOAD_CHECK);
+        if (SettingsActivity.PREF_AUTO_DOWNLOAD.equals(key)) {
+            int autoDownload = getAutoDownloadValue();
             if (autoDownload == PREF_AUTO_DOWNLOAD_DISABLED) {
                 scheduler.stop();
             } else {
                 scheduler.start();
             }
         }
+        if (batteryState != null) {
+            batteryState.onSharedPreferenceChanged(sharedPreferences, key);
+        }
     }
 
     private void autoState(boolean userInitiated, int checkOnly) {
+        Logger.d("autoState state = " + this.state + " userInitiated = " + userInitiated + " checkOnly = " + checkOnly);
+
         String filename = prefs.getString(PREF_READY_FILENAME_NAME,
                 PREF_READY_FILENAME_DEFAULT);
 
@@ -511,6 +513,11 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             HttpClient client = new DefaultHttpClient(params);
             HttpGet request = new HttpGet(url);
             HttpResponse response = client.execute(request);
+            int code = response.getStatusLine().getStatusCode();
+            if (code != HttpStatus.SC_OK) {
+                Logger.d("response: %d", code);
+                return null;
+            }
             int len = (int) response.getEntity().getContentLength();
             if ((len >= 0) && (len < 1024 * 1024)) {
                 byte[] ret = new byte[len];
@@ -542,6 +549,11 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             HttpClient client = new DefaultHttpClient(params);
             HttpGet request = new HttpGet(url);
             HttpResponse response = client.execute(request);
+            int code = response.getStatusLine().getStatusCode();
+            if (code != HttpStatus.SC_OK) {
+                Logger.d("response: %d", code);
+                return null;
+            }
             String responseBody = EntityUtils.toString(response.getEntity(),
                     HTTP.UTF_8);
             return responseBody;
@@ -576,6 +588,11 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             HttpClient client = new DefaultHttpClient(params);
             HttpGet request = new HttpGet(url);
             HttpResponse response = client.execute(request);
+            int code = response.getStatusLine().getStatusCode();
+            if (code != HttpStatus.SC_OK) {
+                Logger.d("response: %d", code);
+                return false;
+            }
             long len = (int) response.getEntity().getContentLength();
             long recv = 0;
             if ((len > 0) && (len < 4L * 1024L * 1024L * 1024L)) {
@@ -608,7 +625,11 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                     .toString(16).toLowerCase(Locale.ENGLISH);
                     while (MD5.length() < 32)
                         MD5 = "0" + MD5;
-                    return MD5.equals(matchMD5);
+                    boolean md5Check = MD5.equals(matchMD5);
+                    if (!md5Check) {
+                        Logger.i("MD5 check failed for " + url);
+                    }
+                    return md5Check;
                 }
                 return true;
             }
@@ -647,6 +668,11 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             HttpClient client = new DefaultHttpClient(params);
             HttpGet request = new HttpGet(url);
             HttpResponse response = client.execute(request);
+            int code = response.getStatusLine().getStatusCode();
+            if (code != HttpStatus.SC_OK) {
+                Logger.d("response: %d", code);
+                return false;
+            }
             len = (int) response.getEntity().getContentLength();
 
             updateState(STATE_ACTION_DOWNLOADING, 0f, 0L, len, f.getName(), null);
@@ -709,7 +735,11 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                     .toString(16).toLowerCase(Locale.ENGLISH);
                     while (MD5.length() < 32)
                         MD5 = "0" + MD5;
-                    return MD5.equals(matchMD5);
+                    boolean md5Check = MD5.equals(matchMD5);
+                    if (!md5Check) {
+                        Logger.i("MD5 check failed for " + url);
+                    }
+                    return md5Check;
                 }
                 return true;
             }
@@ -950,17 +980,36 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         /*
          * Unless the user is specifically asking to check for updates, we only
          * check for them if we have a connection matching the user's set
-         * preferences, we're charging and/or have juice aplenty, and the screen
+         * preferences, we're charging and/or have juice aplenty (>50), and the screen
          * is off
+         *
+         * if user has enabled checking only we only check the screen state
+         * cause the amount of data transferred for checking is not very large
          */
 
         if ((networkState == null) || (batteryState == null)
                 || (screenState == null))
             return false;
 
-        if (!isStateBusy(state)
-                && (userInitiated || (networkState.getState()
-                        && batteryState.getState() && !screenState.getState()))) {
+        Logger.i("checkForUpdates checkOnly = " + checkOnly + " updateRunning = " + updateRunning + " userInitiated = " + userInitiated +
+                " networkState.getState() = " + networkState.getState() + " batteryState.getState() = " + batteryState.getState() +
+                " screenState.getState() = " + screenState.getState());
+
+        if (updateRunning) {
+            Logger.i("Ignoring request to check for updates - busy");
+            return false;
+        }
+        boolean updateAllowed = false;
+        if (checkOnly == PREF_AUTO_DOWNLOAD_CHECK ) {
+            // if we only check we do it on all networks and battery levels
+            updateAllowed = !screenState.getState();
+        } else if (checkOnly > PREF_AUTO_DOWNLOAD_CHECK) {
+            // must confirm to all if we may auto download
+            updateAllowed = networkState.getState()
+                    && batteryState.getState() && !screenState.getState();
+        }
+
+        if (userInitiated || updateAllowed) {
             Logger.i("Starting check for updates");
             checkForUpdatesAsync(userInitiated, checkOnly);
             return true;
@@ -1050,7 +1099,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
 
     private String findInitialFile(List<DeltaInfo> deltas,
             String possibleMatch, boolean[] needsProcessing) {
-        // Find the currently flashed ZIP, or a newer one
+        // Find the currently flashed ZIP
 
         DeltaInfo firstDelta = deltas.get(0);
 
@@ -1320,6 +1369,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             return;
         }
 
+        boolean deltaSignature = prefs.getBoolean(this.PREF_DELTA_SIGNATURE, false);
         String flashFilename = prefs.getString(PREF_READY_FILENAME_NAME,
                 PREF_READY_FILENAME_DEFAULT);
         prefs.edit()
@@ -1355,7 +1405,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             // signature coming from a secure location would be a security
             // risk.
             {
-                if (config.getInjectSignatureEnable()) {
+                if (config.getInjectSignatureEnable() && deltaSignature) {
                     FileOutputStream os = new FileOutputStream(
                             "/cache/recovery/keys", false);
                     try {
@@ -1370,7 +1420,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                 FileOutputStream os = new FileOutputStream(
                         "/cache/recovery/openrecoveryscript", false);
                 try {
-                    if (config.getInjectSignatureEnable()) {
+                    if (config.getInjectSignatureEnable() && deltaSignature) {
                         writeString(os, "cmd cat /res/keys > /res/keys_org");
                         writeString(os,
                                 "cmd cat /cache/recovery/keys > /res/keys");
@@ -1455,6 +1505,19 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         return latestFull != PREF_READY_FILENAME_DEFAULT || latestDelta != PREF_READY_FILENAME_DEFAULT;
     }
 
+    private String getLatestFullMd5Sum(String latestFullFetch) {
+        String md5Url = latestFullFetch + ".md5sum";
+        String latestFullMd5 = downloadUrlMemoryAsString(md5Url);
+        if (latestFullMd5 != null){
+            try {
+                String md5Part = latestFullMd5.split("  ")[0];
+                return md5Part;
+            } catch (Exception e) {
+            }
+        }
+        return null;
+    }
+
     private float getProgress(long current, long total) {
         if (total == 0)
             return 0f;
@@ -1509,6 +1572,11 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         return ret;
     }
 
+    private int getAutoDownloadValue() {
+        String autoDownload = prefs.getString(SettingsActivity.PREF_AUTO_DOWNLOAD, UpdateService.PREF_AUTO_DOWNLOAD_CHECK_STRING);
+        return Integer.valueOf(autoDownload).intValue();
+    }
+
     private void checkForUpdatesAsync(final boolean userInitiated, final int checkOnly) {
         updateState(STATE_ACTION_CHECKING, null, null, null, null, null);
         wakeLock.acquire();
@@ -1535,13 +1603,15 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         // TODO update notification with current step
         startForeground(NOTIFICATION_BUSY, notification);
 
-        final boolean force = userInitiated;
-
         handler.post(new Runnable() {
             @Override
             public void run() {
                 boolean downloadFullBuild = false;
+                boolean force = userInitiated;
+
                 stopDownload = false;
+                updateRunning = true;
+
                 try {
                     Logger.i("Starting check for updates " + userInitiated + ":" + checkOnly + ":" + downloadFullBuild);
 
@@ -1555,6 +1625,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                     prefs.edit().putString(PREF_LATEST_DELTA_NAME, PREF_READY_FILENAME_DEFAULT).commit();
                     prefs.edit().putString(PREF_READY_FILENAME_NAME, PREF_READY_FILENAME_DEFAULT).commit();
                     prefs.edit().putString(PREF_DOWNLOAD_SIZE, null).commit();
+                    prefs.edit().putBoolean(PREF_DELTA_SIGNATURE, false).commit();
 
                     String latestFullBuild = getNewestFullBuild();
                     // if we dont even find a build on dl no sense to continue
@@ -1643,9 +1714,11 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                                             getMD5Progress(STATE_ACTION_CHECKING_MD5, di.getOut()
                                                     .getName())) != null) {
                                 if (latestFullBuild.equals(di.getOut().getName())) {
-                                    Logger.d("match found: %s", di.getOut().getName());
+                                    boolean signedFile = di.getOut().isSignedFile(new File(fn));
+                                    Logger.d("match found (%s): %s", signedFile ? "delta" : "full", di.getOut().getName());
                                     flashFilename = fn;
                                     last = i;
+                                    prefs.edit().putBoolean(PREF_DELTA_SIGNATURE, signedFile).commit();
                                     break;
                                 }
                             }
@@ -1793,6 +1866,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
 
                         if (!downloadFullBuild && checkOnly > PREF_AUTO_DOWNLOAD_CHECK) {
                             // Download all the files we do not have yet
+                            // getFull = false since full download is handled below
                             if (!downloadFiles(deltas, false, downloadSize, force))
                                 return;
 
@@ -1823,14 +1897,17 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                                 if (initialFile.startsWith(config.getPathBase()))
                                     (new File(initialFile)).delete();
                             }
+                            prefs.edit().putBoolean(PREF_DELTA_SIGNATURE, true).commit();
                             prefs.edit().putString(PREF_READY_FILENAME_NAME, flashFilename).commit();
                         }
                     }
                     if (downloadFullBuild && checkOnly == PREF_AUTO_DOWNLOAD_FULL) {
                         if (force || networkState.getState()) {
-                            String md5Url = latestFullFetch + ".md5sum";
-                            String latestFullMd5 = downloadUrlMemoryAsString(md5Url);
-                            downloadFullBuild(latestFullFetch, latestFullMd5, latestFullBuild);
+                            String latestFullMd5 = getLatestFullMd5Sum(latestFullFetch);
+                            if (latestFullMd5 != null){
+                                downloadFullBuild(latestFullFetch, latestFullMd5, latestFullBuild);
+                            } else {
+                                Logger.d("aborting download due to md5sum not found");                            }
                         } else {
                             Logger.d("aborting download due to network state");
                         }
@@ -1841,6 +1918,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                     if (wifiLock.isHeld()) wifiLock.release();
                     if (wakeLock.isHeld()) wakeLock.release();
                     autoState(userInitiated, checkOnly);
+                    updateRunning = false;
                 }
             }
         });

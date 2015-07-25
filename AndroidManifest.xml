@@ -27,12 +27,12 @@
 		android:name="eu.chainfire.opendelta.Application"
 		android:allowBackup="false"
 		android:icon="@drawable/ic_launcher_settings"
-		android:label="@string/app_name"
-		android:theme="@style/Theme.OpenDelta" >
+		android:label="@string/app_name" >
 		<activity
 			android:name="eu.chainfire.opendelta.MainActivity"
 			android:label="@string/title"
-			android:launchMode="singleInstance" >
+			android:launchMode="singleInstance"
+			android:theme="@style/Theme.OpenDelta" >
 			<intent-filter android:priority="2147483647" >
 
 				<!--
@@ -57,6 +57,11 @@
 
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
+		</activity>
+		<activity
+			android:name="eu.chainfire.opendelta.SettingsActivity"
+			android:label="@string/menu_settings"
+			android:theme="@style/Theme.OpenDelta.Settings" >
 		</activity>
 
 		<receiver android:name="eu.chainfire.opendelta.BootCompleteReceiver" >

@@ -150,6 +150,8 @@ OnScreenStateListener
                     .commit();
                 }
             }
+        } else {
+            Logger.i("Skip checkForUpdates");
         }
         return false;
     }

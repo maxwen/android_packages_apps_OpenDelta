@@ -96,8 +96,8 @@ public class Config {
         Resources res = context.getResources();
 
         // TODO fake
-        property_version ="5.1.1-20150715-find7-NIGHTLY";
-        //property_version = getProperty(context, res.getString(R.string.property_version), "");
+        //property_version ="5.1.1-20150715-find7-NIGHTLY";
+        property_version = getProperty(context, res.getString(R.string.property_version), "");
         property_device = getProperty(context, res.getString(R.string.property_device), "");
         filename_base = String.format(Locale.ENGLISH, res.getString(R.string.filename_base),
                 property_version);

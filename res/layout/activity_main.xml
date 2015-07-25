@@ -14,13 +14,6 @@
 		<LinearLayout
 			android:layout_width="match_parent"
 			android:layout_height="60dp"
-			android:background="@color/title_text_bg"
-			android:orientation="horizontal" >
-		</LinearLayout>
-
-		<LinearLayout
-			android:layout_width="match_parent"
-			android:layout_height="60dp"
 			android:background="@color/title_text_bg" >
 
 			<TextView
@@ -142,7 +135,9 @@
 					android:id="@+id/button_stop"
 					android:layout_width="wrap_content"
 					android:layout_height="match_parent"
+					android:layout_marginStart="8dp"
 					android:background="?android:attr/selectableItemBackground"
+					android:contentDescription="@string/button_stop"
 					android:onClick="onButtonStopClick"
 					android:src="@android:drawable/ic_menu_close_clear_cancel" />
 			</LinearLayout>
@@ -159,6 +154,7 @@
 	</LinearLayout>
 
 	<LinearLayout
+		android:id="@+id/filler"
 		android:layout_width="match_parent"
 		android:layout_height="0dp"
 		android:layout_weight="1.0"

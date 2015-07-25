@@ -32,7 +32,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
-import android.content.DialogInterface.OnMultiChoiceClickListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -44,7 +43,6 @@ import android.text.format.DateFormat;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -77,6 +75,7 @@ public class MainActivity extends Activity {
             Logger.ex(e);
         }
         getActionBar().setDisplayHomeAsUpEnabled(true);
+        getActionBar().setElevation(0);
 
         UpdateService.start(this);
 
@@ -101,70 +100,7 @@ public class MainActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
-        
-        if (!config.getSecureModeEnable()) {
-            menu.findItem(R.id.action_secure_mode).setVisible(false);
-        } else {
-            menu.findItem(R.id.action_secure_mode).setChecked(config.getSecureModeCurrent());
-        }
-        
         return true;
-    }
-
-    private void showNetworks() {
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-
-        int flags = prefs.getInt(UpdateService.PREF_AUTO_UPDATE_NETWORKS_NAME,
-                UpdateService.PREF_AUTO_UPDATE_NETWORKS_DEFAULT);
-        final boolean[] checkedItems = new boolean[] {
-                (flags & NetworkState.ALLOW_2G) == NetworkState.ALLOW_2G,
-                (flags & NetworkState.ALLOW_3G) == NetworkState.ALLOW_3G,
-                (flags & NetworkState.ALLOW_4G) == NetworkState.ALLOW_4G,
-                (flags & NetworkState.ALLOW_WIFI) == NetworkState.ALLOW_WIFI,
-                (flags & NetworkState.ALLOW_ETHERNET) == NetworkState.ALLOW_ETHERNET,
-                (flags & NetworkState.ALLOW_UNKNOWN) == NetworkState.ALLOW_UNKNOWN
-        };
-
-        (new AlertDialog.Builder(this)).
-                setTitle(R.string.title_networks).
-                setMultiChoiceItems(new CharSequence[] {
-                        getString(R.string.network_2g),
-                        getString(R.string.network_3g),
-                        getString(R.string.network_4g),
-                        getString(R.string.network_wifi),
-                        getString(R.string.network_ethernet),
-                        getString(R.string.network_unknown),
-                }, checkedItems, new OnMultiChoiceClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                        checkedItems[which] = isChecked;
-                    }
-                }).
-                setPositiveButton(android.R.string.ok, new OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        int flags = 0;
-                        if (checkedItems[0])
-                            flags += NetworkState.ALLOW_2G;
-                        if (checkedItems[1])
-                            flags += NetworkState.ALLOW_3G;
-                        if (checkedItems[2])
-                            flags += NetworkState.ALLOW_4G;
-                        if (checkedItems[3])
-                            flags += NetworkState.ALLOW_WIFI;
-                        if (checkedItems[4])
-                            flags += NetworkState.ALLOW_ETHERNET;
-                        if (checkedItems[5])
-                            flags += NetworkState.ALLOW_UNKNOWN;
-                        prefs.
-                                edit().
-                                putInt(UpdateService.PREF_AUTO_UPDATE_NETWORKS_NAME, flags).
-                                commit();
-                    }
-                }).
-                setNegativeButton(android.R.string.cancel, null).
-                setCancelable(true).
-                show();
     }
 
     private void showAbout() {
@@ -189,52 +125,15 @@ public class MainActivity extends Activity {
             textView.setTypeface(title.getTypeface());
     }
 
-    private void showAutoDownload() {
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        int autoDownload = prefs.getInt(UpdateService.PREF_AUTO_DOWNLOAD, UpdateService.PREF_AUTO_DOWNLOAD_CHECK);
-
-        (new AlertDialog.Builder(this)).
-        setTitle(R.string.auto_download_title).
-        setSingleChoiceItems(new CharSequence[] {
-                getString(R.string.download_disabled),
-                getString(R.string.check_only),
-                getString(R.string.download_delta),
-                getString(R.string.download_full),
-        }, autoDownload, new OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                int autoDownload = which;
-                prefs.edit().putInt(UpdateService.PREF_AUTO_DOWNLOAD, autoDownload).commit();
-                dialog.dismiss();
-            }
-        }).
-        setNegativeButton(android.R.string.cancel, null).
-        setCancelable(true).
-        show();
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
                 finish();
                 return true;
-            case R.id.action_networks:
-                showNetworks();
-                return true;
-            case R.id.action_secure_mode:
-                item.setChecked(config.setSecureModeCurrent(!item.isChecked()));
-                
-                (new AlertDialog.Builder(this)).
-                    setTitle(item.isChecked() ? R.string.secure_mode_enabled_title : R.string.secure_mode_disabled_title).
-                    setMessage(Html.fromHtml(getString(item.isChecked() ? R.string.secure_mode_enabled_description : R.string.secure_mode_disabled_description))).
-                    setCancelable(true).
-                    setNeutralButton(android.R.string.ok, null).
-                    show();
-                
-                return true;
-            case R.id.auto_download:
-                showAutoDownload();
+            case R.id.settings:
+                Intent settingsActivity = new Intent(this, SettingsActivity.class);
+                startActivity(settingsActivity);
                 return true;
             case R.id.action_about:
                 showAbout();
@@ -261,7 +160,7 @@ public class MainActivity extends Activity {
                 if (ms == 0) {
                     return "";
                 } else {
-                    return String.format("%s\n%s", filename, getString(R.string.last_checked,
+                    return String.format("%s %s", filename, getString(R.string.last_checked,
                             DateFormat.getDateFormat(MainActivity.this).format(date),
                             DateFormat.getTimeFormat(MainActivity.this).format(date)
                             ));
@@ -297,9 +196,19 @@ public class MainActivity extends Activity {
                     // String for this state could not be found (displays empty string)
                     Logger.ex(e);                    
                 }
+                // dont spill for progress
+                if (!state.equals(UpdateService.STATE_ACTION_DOWNLOADING) &&
+                        !state.equals(UpdateService.STATE_ACTION_SEARCHING) &&
+                        !state.equals(UpdateService.STATE_ACTION_SEARCHING_MD5) &&
+                        !state.equals(UpdateService.STATE_ACTION_CHECKING) &&
+                        !state.equals(UpdateService.STATE_ACTION_CHECKING_MD5) &&
+                        !state.equals(UpdateService.STATE_ACTION_APPLYING) &&
+                        !state.equals(UpdateService.STATE_ACTION_APPLYING_MD5) &&
+                        !state.equals(UpdateService.STATE_ACTION_APPLYING_PATCH)) {
+                    Logger.d("onReceive state = " + state);
+                }
             }
 
-            //Logger.d("onReceive : " + state);
             if (UpdateService.STATE_ERROR_DISK_SPACE.equals(state)) {
                 enableCheck = true;
                 progress.setIndeterminate(false);
@@ -451,6 +360,12 @@ public class MainActivity extends Activity {
     protected void onStop() {
         unregisterReceiver(updateReceiver);
         super.onStop();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        UpdateService.startUpdate(this);
     }
 
     public void onButtonCheckNowClick(View v) {
