@@ -83,5 +83,6 @@
 	<string name="twenty_five_percent">25</string>
 	<string name="fifty_percent">50;</string>
 	<string name="seventy_five_percent">75</string>
+	<string name="title_error">System updates error</string>
 
 </resources>

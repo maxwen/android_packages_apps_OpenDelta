@@ -197,14 +197,7 @@ public class MainActivity extends Activity {
                     Logger.ex(e);                    
                 }
                 // dont spill for progress
-                if (!state.equals(UpdateService.STATE_ACTION_DOWNLOADING) &&
-                        !state.equals(UpdateService.STATE_ACTION_SEARCHING) &&
-                        !state.equals(UpdateService.STATE_ACTION_SEARCHING_MD5) &&
-                        !state.equals(UpdateService.STATE_ACTION_CHECKING) &&
-                        !state.equals(UpdateService.STATE_ACTION_CHECKING_MD5) &&
-                        !state.equals(UpdateService.STATE_ACTION_APPLYING) &&
-                        !state.equals(UpdateService.STATE_ACTION_APPLYING_MD5) &&
-                        !state.equals(UpdateService.STATE_ACTION_APPLYING_PATCH)) {
+                if (!UpdateService.isProgressState(state)) {
                     Logger.d("onReceive state = " + state);
                 }
             }
