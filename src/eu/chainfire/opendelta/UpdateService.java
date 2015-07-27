@@ -521,7 +521,6 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             // String for this state could not be found (displays empty string)
             Logger.ex(e);                    
         }
-        notificationManager.cancel(NOTIFICATION_ERROR);
         if (errorStateString != null) {
             notificationManager.notify(
                     NOTIFICATION_ERROR,
@@ -533,6 +532,10 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                     .setShowWhen(false)
                     .setContentIntent(getNotificationIntent(false)).build());
         }
+    }
+
+    private void stopErrorNotification() {
+        notificationManager.cancel(NOTIFICATION_ERROR);
     }
 
     private byte[] downloadUrlMemory(String url) {
@@ -1682,6 +1685,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         wifiLock.acquire();
 
         stopNotification();
+        stopErrorNotification();
 
         Notification notification = (new Notification.Builder(this)).
                 setSmallIcon(R.drawable.stat_notify_update).
