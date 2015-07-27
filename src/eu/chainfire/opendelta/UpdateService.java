@@ -493,19 +493,16 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         }
 
         String notifyFileName = readyToFlash ? flashFilename : latestFull.substring(0, latestFull.lastIndexOf('.'));
-        String notifyText = readyToFlash ? getString(R.string.notify_update_to_available_flash) : getString(R.string.notify_update_to_available_download);
-        String fullNotifyText = String.format(Locale.ENGLISH, notifyText, notifyFileName);
 
         notificationManager.notify(
                 NOTIFICATION_UPDATE,
                 (new Notification.Builder(this))
                 .setSmallIcon(R.drawable.stat_notify_update)
-                .setContentTitle(getString(R.string.title))
-                .setTicker(fullNotifyText)
+                .setContentTitle(readyToFlash ? getString(R.string.notify_title_flash) : getString(R.string.notify_title_download))
                 .setShowWhen(false)
                 .setContentIntent(getNotificationIntent(false))
                 .setDeleteIntent(getNotificationIntent(true))
-                .setStyle(new Notification.BigTextStyle().bigText(fullNotifyText)).build());
+                .setContentText(notifyFileName).build());
     }
 
     private void stopNotification() {
@@ -526,9 +523,8 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                     NOTIFICATION_ERROR,
                     (new Notification.Builder(this))
                     .setSmallIcon(R.drawable.stat_notify_error)
-                    .setContentTitle(getString(R.string.title_error))
+                    .setContentTitle(getString(R.string.notify_title_error))
                     .setContentText(errorStateString)
-                    .setTicker(errorStateString)
                     .setShowWhen(false)
                     .setContentIntent(getNotificationIntent(false)).build());
         }

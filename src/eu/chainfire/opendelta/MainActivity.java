@@ -49,6 +49,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
+    private static final String PREF_START_HINT_SHOWN = "start_hint_shown";
+
     private TextView title = null;
     private TextView sub = null;
     private ProgressBar progress = null;
@@ -185,6 +187,7 @@ public class MainActivity extends Activity {
             boolean deltaUpdatePossible = false;
             boolean fullUpdatePossible = false;
             boolean enableProgress = false;
+            final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
 
             String state = intent.getStringExtra(UpdateService.EXTRA_STATE);
             // don't try this at home
@@ -196,9 +199,10 @@ public class MainActivity extends Activity {
                     // String for this state could not be found (displays empty string)
                     Logger.ex(e);                    
                 }
-                // check for first start - last update time will be null
-                // use a special title then
-                if (intent.getLongExtra(UpdateService.EXTRA_MS, 0) == 0) {
+                // check for first start until check button has been pressed
+                // use a special title then - but only once
+                if (UpdateService.STATE_ACTION_NONE.equals(state) &&
+                        !prefs.getBoolean(PREF_START_HINT_SHOWN, false)) {
                 	title = getString(R.string.last_checked_never_title);
                 }
                 // dont spill for progress
@@ -241,7 +245,6 @@ public class MainActivity extends Activity {
                 lastCheckedText = formatLastChecked(null,
                         intent.getLongExtra(UpdateService.EXTRA_MS, 0));
 
-                final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
                 final String flashImage = prefs.getString(UpdateService.PREF_READY_FILENAME_NAME, UpdateService.PREF_READY_FILENAME_DEFAULT);
                 String flashImageBase = flashImage != UpdateService.PREF_READY_FILENAME_DEFAULT ? new File(flashImage).getName() : null;
                 if (flashImageBase != null) {
@@ -253,7 +256,6 @@ public class MainActivity extends Activity {
                 lastCheckedText = formatLastChecked(null,
                         intent.getLongExtra(UpdateService.EXTRA_MS, 0));
 
-                final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
                 final String latestFull = prefs.getString(UpdateService.PREF_LATEST_FULL_NAME, UpdateService.PREF_READY_FILENAME_DEFAULT);
                 final String latestDelta = prefs.getString(UpdateService.PREF_LATEST_DELTA_NAME, UpdateService.PREF_READY_FILENAME_DEFAULT);
 
@@ -367,6 +369,10 @@ public class MainActivity extends Activity {
     }
 
     public void onButtonCheckNowClick(View v) {
+        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if (!prefs.getBoolean(PREF_START_HINT_SHOWN, false)) {
+            prefs.edit().putBoolean(PREF_START_HINT_SHOWN, true).commit();
+        }
         UpdateService.startCheck(this);
     }
 

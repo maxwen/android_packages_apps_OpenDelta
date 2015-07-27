@@ -37,8 +37,6 @@
 	<string name="state_error_unknown">Unknown error.</string>
 	<string name="error_disk_space_sub" formatted="false">%d MiB available, %d MiB required</string>
 	<string name="notify_update_available">An update is available</string>
-	<string name="notify_update_to_available_download" formatted="false">Update %s available for downloading</string>
-	<string name="notify_update_to_available_flash" formatted="false">Update %s available for flashing</string>
 	<string name="notify_checking">Checking for update &#8230;</string>
 	<string name="last_checked" formatted="false">%s at %s</string>
 	<string name="last_checked_never">We\'ve never checked, maybe you would like to do so?</string>
@@ -84,7 +82,9 @@
 	<string name="twenty_five_percent">25</string>
 	<string name="fifty_percent">50;</string>
 	<string name="seventy_five_percent">75</string>
-	<string name="title_error">System updates error</string>
+	<string name="notify_title_error">System update error</string>
+	<string name="notify_title_flash">Update ready to flash</string>
+	<string name="notify_title_download">Update ready to download</string>
 	<string name="last_checked_never_title">Press \'Check for update\'</string>
 	<string name="screen_state_title">On screen-off only</string>
 	<string name="category_scheduler">Scheduler</string>

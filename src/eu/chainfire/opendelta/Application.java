@@ -21,7 +21,6 @@
 
 package eu.chainfire.opendelta;
 
-import eu.chainfire.opendelta.R;
 
 public class Application extends android.app.Application {
     @Override
