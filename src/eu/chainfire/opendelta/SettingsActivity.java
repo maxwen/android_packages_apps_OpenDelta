@@ -17,7 +17,12 @@
  */
 package eu.chainfire.opendelta;
 
+import java.util.Calendar;
+import java.util.Locale;
+
 import android.app.AlertDialog;
+import android.app.TimePickerDialog;
+import android.app.TimePickerDialog.OnTimeSetListener;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.DialogInterface.OnMultiChoiceClickListener;
@@ -32,16 +37,22 @@ import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.text.Html;
+import android.text.format.DateFormat;
 import android.view.MenuItem;
+import android.widget.TimePicker;
+
 
 public class SettingsActivity extends PreferenceActivity implements
-        OnPreferenceChangeListener  {
+        OnPreferenceChangeListener, OnTimeSetListener  {
     private static final String KEY_NETWORKS = "networks_config";
     public static final String PREF_AUTO_DOWNLOAD = "auto_download_actions";
     public static final String PREF_CHARGE_ONLY = "charge_only";
     public static final String PREF_BATTERY_LEVEL = "battery_level_string";
     private static final String KEY_SECURE_MODE = "secure_mode";
     private static final String KEY_CATEGORY_DOWNLOAD = "category_download";
+    public static final String PREF_SCREEN_STATE = "screen_state";
+    public static final String PREF_SCHEDULER_MODE = "scheduler_mode";
+    public static final String PREF_SCHEDULER_DAILY_TIME = "scheduler_daily_time";
 
     private Preference mNetworksConfig;
     private ListPreference mAutoDownload;
@@ -50,6 +61,9 @@ public class SettingsActivity extends PreferenceActivity implements
     private CheckBoxPreference mSecureMode;
     private Config mConfig;
     private PreferenceCategory mAutoDownloadCategory;
+    private CheckBoxPreference mScreenState;
+    private ListPreference mSchedulerMode;
+    private Preference mSchedulerDailyTime;
 
     @Override
     public void onPause() {
@@ -88,6 +102,18 @@ public class SettingsActivity extends PreferenceActivity implements
         String autoDownload = prefs.getString(PREF_AUTO_DOWNLOAD, UpdateService.PREF_AUTO_DOWNLOAD_CHECK_STRING);
         int autoDownloadValue = Integer.valueOf(autoDownload).intValue();
         mAutoDownloadCategory.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_CHECK);
+        mScreenState = (CheckBoxPreference) findPreference(PREF_SCREEN_STATE);
+        mScreenState.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_DISABLED);
+        
+        mSchedulerMode = (ListPreference) findPreference(PREF_SCHEDULER_MODE);
+        mSchedulerMode.setOnPreferenceChangeListener(this);
+        mSchedulerMode.setSummary(mSchedulerMode.getEntry());
+        mSchedulerMode.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_DISABLED);
+
+        String schedulerMode = prefs.getString(PREF_SCHEDULER_MODE, "0");
+        mSchedulerDailyTime = (Preference) findPreference(PREF_SCHEDULER_DAILY_TIME);
+        mSchedulerDailyTime.setEnabled(!schedulerMode.equals("0"));
+        mSchedulerDailyTime.setSummary(prefs.getString(PREF_SCHEDULER_DAILY_TIME, "00:00"));
     }
 
     @Override
@@ -123,6 +149,9 @@ public class SettingsActivity extends PreferenceActivity implements
                 setNeutralButton(android.R.string.ok, null).
                 show();
             return true;
+        } else if (preference == mSchedulerDailyTime) {
+        	showTimePicker();
+            return true;
         }
         return false;
     }
@@ -136,12 +165,21 @@ public class SettingsActivity extends PreferenceActivity implements
             mAutoDownload.setValueIndex(idx);
             int autoDownloadValue = Integer.valueOf(value).intValue();
             mAutoDownloadCategory.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_CHECK);
+            mScreenState.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_DISABLED);
+            mSchedulerMode.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_DISABLED);
             return true;
         } else if (preference == mBatteryLevel) {
             String value = (String) newValue;
             int idx = mBatteryLevel.findIndexOfValue(value);
             mBatteryLevel.setSummary(mBatteryLevel.getEntries()[idx]);
             mBatteryLevel.setValueIndex(idx);
+            return true;
+        } else if (preference == mSchedulerMode) {
+            String value = (String) newValue;
+            int idx = mSchedulerMode.findIndexOfValue(value);
+            mSchedulerMode.setSummary(mSchedulerMode.getEntries()[idx]);
+            mSchedulerMode.setValueIndex(idx);
+            mSchedulerDailyTime.setEnabled(!value.equals("0"));
             return true;
         }
         return false;
@@ -202,4 +240,21 @@ public class SettingsActivity extends PreferenceActivity implements
                 setCancelable(true).
                 show();
     }
+
+	@Override
+	public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String prefValue = String.format(Locale.ENGLISH, "%02d:%02d", hourOfDay, minute);
+        prefs.edit().putString(PREF_SCHEDULER_DAILY_TIME, prefValue).commit();
+        mSchedulerDailyTime.setSummary(prefValue);
+	}
+
+	private void showTimePicker() {
+		final Calendar c = Calendar.getInstance();
+		final int hour = c.get(Calendar.HOUR_OF_DAY);
+		final int minute = c.get(Calendar.MINUTE);
+
+		new TimePickerDialog(this, this, hour, minute,
+				DateFormat.is24HourFormat(this)).show();
+	}
 }

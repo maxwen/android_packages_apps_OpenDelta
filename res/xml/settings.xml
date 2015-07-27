@@ -23,13 +23,32 @@
 		android:persistent="false"
 		android:title="@string/action_secure_mode" />
 
-	<ListPreference
-		android:defaultValue="1"
-		android:entries="@array/scheduler_actions_keys"
-		android:entryValues="@array/scheduler_actions_values"
-		android:key="auto_download_actions"
-		android:title="@string/auto_download_title" />
+	<PreferenceCategory
+		android:key="category_scheduler"
+		android:title="@string/category_scheduler" >
+		<ListPreference
+			android:defaultValue="1"
+			android:entries="@array/scheduler_actions_keys"
+			android:entryValues="@array/scheduler_actions_values"
+			android:key="auto_download_actions"
+			android:title="@string/auto_download_title" />
+		<ListPreference
+			android:defaultValue="0"
+			android:entries="@array/scheduler_mode_keys"
+			android:entryValues="@array/scheduler_mode_values"
+			android:key="scheduler_mode"
+			android:title="@string/scheduler_mode_title" />
 
+		<Preference
+			android:key="scheduler_daily_time"
+			android:persistent="false"
+			android:title="@string/scheduler_daily_time" />
+
+		<CheckBoxPreference
+			android:defaultValue="true"
+			android:key="screen_state"
+			android:title="@string/screen_state_title" />
+	</PreferenceCategory>
 	<PreferenceCategory
 		android:key="category_download"
 		android:title="@string/category_download" >

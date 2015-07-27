@@ -393,6 +393,9 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         if (batteryState != null) {
             batteryState.onSharedPreferenceChanged(sharedPreferences, key);
         }
+        if (scheduler != null) {
+        	scheduler.onSharedPreferenceChanged(sharedPreferences, key);
+        }
     }
 
     private void autoState(boolean userInitiated, int checkOnly) {
@@ -439,6 +442,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                 if (!isSnoozeNotification()) {
                     startNotification(checkOnly);
                 } else {
+                	Logger.d("notification snoozed");
                     stopNotification();
                 }
             }
@@ -461,6 +465,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             if (!isSnoozeNotification()) {
                 startNotification(checkOnly);
             } else {
+            	Logger.d("notification snoozed");
                 stopNotification();
             }
         }
@@ -516,6 +521,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             // String for this state could not be found (displays empty string)
             Logger.ex(e);                    
         }
+        notificationManager.cancel(NOTIFICATION_ERROR);
         if (errorStateString != null) {
             notificationManager.notify(
                     NOTIFICATION_ERROR,
@@ -1034,11 +1040,11 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         boolean updateAllowed = false;
         if (checkOnly == PREF_AUTO_DOWNLOAD_CHECK ) {
             // if we only check we do it on all networks and battery levels
-            updateAllowed = !screenState.getState();
+            updateAllowed = isScreenStateEnabled();
         } else if (checkOnly > PREF_AUTO_DOWNLOAD_CHECK) {
             // must confirm to all if we may auto download
             updateAllowed = networkState.getState()
-                    && batteryState.getState() && !screenState.getState();
+                    && batteryState.getState() && isScreenStateEnabled();
         }
 
         if (userInitiated || updateAllowed) {
@@ -1614,6 +1620,19 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
     private int getAutoDownloadValue() {
         String autoDownload = prefs.getString(SettingsActivity.PREF_AUTO_DOWNLOAD, UpdateService.PREF_AUTO_DOWNLOAD_CHECK_STRING);
         return Integer.valueOf(autoDownload).intValue();
+    }
+
+    private boolean isScreenStateEnabled() {
+    	if (screenState == null) {
+    		return false;
+    	}
+    	boolean screenStateValue = screenState.getState();
+    	boolean prefValue = prefs.getBoolean(SettingsActivity.PREF_SCREEN_STATE, true);
+    	if (prefValue) {
+    		return screenStateValue;
+    	}
+    	// always allow
+    	return true;
     }
 
     public static boolean isProgressState(String state) {

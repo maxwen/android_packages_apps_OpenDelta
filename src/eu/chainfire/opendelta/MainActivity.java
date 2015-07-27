@@ -149,7 +149,7 @@ public class MainActivity extends Activity {
             Date date = new Date(ms);
             if (filename == null) {
                 if (ms == 0) {
-                    return getString(R.string.last_checked_never);
+                    return "";
                 } else {
                     return getString(R.string.last_checked,
                             DateFormat.getDateFormat(MainActivity.this).format(date),
@@ -195,6 +195,11 @@ public class MainActivity extends Activity {
                 } catch (Exception e) {
                     // String for this state could not be found (displays empty string)
                     Logger.ex(e);                    
+                }
+                // check for first start - last update time will be null
+                // use a special title then
+                if (intent.getLongExtra(UpdateService.EXTRA_MS, 0) == 0) {
+                	title = getString(R.string.last_checked_never_title);
                 }
                 // dont spill for progress
                 if (!UpdateService.isProgressState(state)) {
