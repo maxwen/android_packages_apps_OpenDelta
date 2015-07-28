@@ -1,6 +1,6 @@
 /* 
  * Copyright (C) 2013-2014 Jorrit "Chainfire" Jongma
- * Copyright (C) 2013-2015 The OmniROM Project
+ * Copyright (C) 2013-2014 The OmniROM Project
  */
 /* 
  * This file is part of OpenDelta.
@@ -60,8 +60,8 @@ public class ScreenState {
                     state = false;
             }
             if (state == null) {
-                state = ((PowerManager) context
-                        .getSystemService(Context.POWER_SERVICE)).isScreenOn();
+                state = ((PowerManager) context.getSystemService(Context.POWER_SERVICE))
+                        .isScreenOn();
             }
 
             if ((stateLast == null) || (stateLast != state)) {
@@ -71,8 +71,7 @@ public class ScreenState {
         }
     }
 
-    public boolean start(Context context,
-            OnScreenStateListener onScreenStateListener) {
+    public boolean start(Context context, OnScreenStateListener onScreenStateListener) {
         if (this.context == null) {
             this.context = context;
             this.onScreenStateListener = onScreenStateListener;

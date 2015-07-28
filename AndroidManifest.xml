@@ -15,11 +15,10 @@
 	<uses-permission android:name="android.permission.BROADCAST_STICKY" />
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-	<!--
-    <uses-permission android:name="android.permission.ACCESS_CACHE_FILESYSTEM" />
+	<uses-permission android:name="android.permission.ACCESS_CACHE_FILESYSTEM" />
 	<uses-permission android:name="android.permission.REBOOT" />
 	<uses-permission android:name="android.permission.RECOVERY" />
-	-->
+
 	<application
 		android:name="eu.chainfire.opendelta.Application"
 		android:allowBackup="false"
@@ -32,14 +31,16 @@
 			android:theme="@style/Theme.OpenDelta" >
 			<intent-filter android:priority="2147483647" >
 				<!--
-                	Show up under Settings, About Device, System Updates. 
-                	Assuming that is not disabled. There's a config option for that.
-                	APK needs to be in priv-app for this to work!
+				Show up under Settings, About Device, System Updates.
+				Assuming that is not disabled. There's a config option for that.
+				APK needs to be in priv-app for this to work!
 				-->
 				<action android:name="android.settings.SYSTEM_UPDATE_SETTINGS" />
 				<!-- Show in launcher for debugging purposed -->
+				<!--
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />
+				-->
 			</intent-filter>
 		</activity>
 		<activity

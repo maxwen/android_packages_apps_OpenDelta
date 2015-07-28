@@ -1041,7 +1041,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         }
 
         boolean updateAllowed = false;
-        if (checkOnly > PREF_AUTO_DOWNLOAD_CHECK) {
+        if (!userInitiated && checkOnly > PREF_AUTO_DOWNLOAD_CHECK) {
             // must confirm to all if we may auto download
             updateAllowed = networkState.getState()
                     && batteryState.getState() && isScreenStateEnabled();
