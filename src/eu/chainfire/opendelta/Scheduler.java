@@ -136,12 +136,22 @@ OnScreenStateListener, OnSharedPreferenceChangeListener
     @Override
     public void onScreenState(boolean state) {
         if (!stopped && !dailyAlarm) {
+            Logger.d("isScreenStateEnabled = " + isScreenStateEnabled(state));
             if (!state) {
                 setDetectSleepAlarm();
             } else {
                 cancelDetectSleepAlarm();
             }
         }
+    }
+
+    private boolean isScreenStateEnabled(boolean screenStateValue) {
+        boolean prefValue = prefs.getBoolean(SettingsActivity.PREF_SCREEN_STATE_OFF, true);
+        if (prefValue) {
+            // only when screen off
+            return !screenStateValue;
+        }
+        return true;
     }
 
     private boolean checkForUpdates(boolean force) {

@@ -50,7 +50,7 @@ public class SettingsActivity extends PreferenceActivity implements
     public static final String PREF_BATTERY_LEVEL = "battery_level_string";
     private static final String KEY_SECURE_MODE = "secure_mode";
     private static final String KEY_CATEGORY_DOWNLOAD = "category_download";
-    public static final String PREF_SCREEN_STATE = "screen_state";
+    public static final String PREF_SCREEN_STATE_OFF = "screen_state_off";
     public static final String PREF_SCHEDULER_MODE = "scheduler_mode";
     public static final String PREF_SCHEDULER_DAILY_TIME = "scheduler_daily_time";
 
@@ -102,7 +102,7 @@ public class SettingsActivity extends PreferenceActivity implements
         String autoDownload = prefs.getString(PREF_AUTO_DOWNLOAD, UpdateService.PREF_AUTO_DOWNLOAD_CHECK_STRING);
         int autoDownloadValue = Integer.valueOf(autoDownload).intValue();
         mAutoDownloadCategory.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_CHECK);
-        mScreenState = (CheckBoxPreference) findPreference(PREF_SCREEN_STATE);
+        mScreenState = (CheckBoxPreference) findPreference(PREF_SCREEN_STATE_OFF);
         mScreenState.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_DISABLED);
         
         mSchedulerMode = (ListPreference) findPreference(PREF_SCHEDULER_MODE);

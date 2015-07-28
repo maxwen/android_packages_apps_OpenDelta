@@ -86,7 +86,8 @@
 	<string name="notify_title_flash">Update ready to flash</string>
 	<string name="notify_title_download">Update ready to download</string>
 	<string name="last_checked_never_title">Press \'Check for update\'</string>
-	<string name="screen_state_title">On screen-off only</string>
+	<string name="screen_state_title">Screen-off</string>
+	<string name="screen_state_message">Trigger scheduler actions only when screen is off</string>
 	<string name="category_scheduler">Scheduler</string>
 	<string name="scheduler_mode_title">Mode</string>
 	<string name="scheduler_smart">Smart</string>

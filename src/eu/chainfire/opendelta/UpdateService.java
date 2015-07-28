@@ -1626,9 +1626,10 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
     		return false;
     	}
     	boolean screenStateValue = screenState.getState();
-    	boolean prefValue = prefs.getBoolean(SettingsActivity.PREF_SCREEN_STATE, true);
+    	boolean prefValue = prefs.getBoolean(SettingsActivity.PREF_SCREEN_STATE_OFF, true);
     	if (prefValue) {
-    		return screenStateValue;
+    	    // only when screen off
+    		return !screenStateValue;
     	}
     	// always allow
     	return true;
