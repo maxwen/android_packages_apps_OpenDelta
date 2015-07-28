@@ -3,11 +3,9 @@
 	package="eu.chainfire.opendelta"
 	android:versionCode="10"
 	android:versionName="1.0" >
-
 	<uses-sdk
 		android:minSdkVersion="21"
 		android:targetSdkVersion="21" />
-
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -22,7 +20,6 @@
 	<uses-permission android:name="android.permission.REBOOT" />
 	<uses-permission android:name="android.permission.RECOVERY" />
 	-->
-
 	<application
 		android:name="eu.chainfire.opendelta.Application"
 		android:allowBackup="false"
@@ -34,17 +31,14 @@
 			android:launchMode="singleInstance"
 			android:theme="@style/Theme.OpenDelta" >
 			<intent-filter android:priority="2147483647" >
-
 				<!--
                 	Show up under Settings, About Device, System Updates. 
                 	Assuming that is not disabled. There's a config option for that.
                 	APK needs to be in priv-app for this to work!
 				-->
 				<action android:name="android.settings.SYSTEM_UPDATE_SETTINGS" />
-
 				<!-- Show in launcher for debugging purposed -->
 				<action android:name="android.intent.action.MAIN" />
-
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
@@ -54,7 +48,6 @@
 			android:theme="@android:style/Theme.Translucent.NoTitleBar" >
 			<intent-filter>
 				<action android:name="android.intent.action.CREATE_SHORTCUT" />
-
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
@@ -63,18 +56,14 @@
 			android:label="@string/menu_settings"
 			android:theme="@style/Theme.OpenDelta.Settings" >
 		</activity>
-
 		<receiver android:name="eu.chainfire.opendelta.BootCompleteReceiver" >
 			<intent-filter>
 				<action android:name="android.intent.action.BOOT_COMPLETED" />
-
 				<category android:name="android.intent.category.HOME" />
 			</intent-filter>
 		</receiver>
-
 		<service
 			android:name="eu.chainfire.opendelta.UpdateService"
 			android:exported="false" />
 	</application>
-
 </manifest>

@@ -41,9 +41,8 @@ import android.text.format.DateFormat;
 import android.view.MenuItem;
 import android.widget.TimePicker;
 
-
 public class SettingsActivity extends PreferenceActivity implements
-        OnPreferenceChangeListener, OnTimeSetListener  {
+        OnPreferenceChangeListener, OnTimeSetListener {
     private static final String KEY_NETWORKS = "networks_config";
     public static final String PREF_AUTO_DOWNLOAD = "auto_download_actions";
     public static final String PREF_CHARGE_ONLY = "charge_only";
@@ -79,7 +78,8 @@ public class SettingsActivity extends PreferenceActivity implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(this);
         mConfig = Config.getInstance(this);
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -99,30 +99,34 @@ public class SettingsActivity extends PreferenceActivity implements
         mSecureMode.setChecked(mConfig.getSecureModeCurrent());
         mAutoDownloadCategory = (PreferenceCategory) findPreference(KEY_CATEGORY_DOWNLOAD);
 
-        String autoDownload = prefs.getString(PREF_AUTO_DOWNLOAD, UpdateService.PREF_AUTO_DOWNLOAD_CHECK_STRING);
+        String autoDownload = prefs.getString(PREF_AUTO_DOWNLOAD,
+                UpdateService.PREF_AUTO_DOWNLOAD_CHECK_STRING);
         int autoDownloadValue = Integer.valueOf(autoDownload).intValue();
-        mAutoDownloadCategory.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_CHECK);
+        mAutoDownloadCategory
+                .setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_CHECK);
         mScreenState = (CheckBoxPreference) findPreference(PREF_SCREEN_STATE_OFF);
-        
+
         mSchedulerMode = (ListPreference) findPreference(PREF_SCHEDULER_MODE);
         mSchedulerMode.setOnPreferenceChangeListener(this);
         mSchedulerMode.setSummary(mSchedulerMode.getEntry());
-        mSchedulerMode.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_DISABLED);
+        mSchedulerMode
+                .setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_DISABLED);
 
         String schedulerMode = prefs.getString(PREF_SCHEDULER_MODE, "0");
         mSchedulerDailyTime = (Preference) findPreference(PREF_SCHEDULER_DAILY_TIME);
         mSchedulerDailyTime.setEnabled(!schedulerMode.equals("0"));
-        mSchedulerDailyTime.setSummary(prefs.getString(PREF_SCHEDULER_DAILY_TIME, "00:00"));
+        mSchedulerDailyTime.setSummary(prefs.getString(
+                PREF_SCHEDULER_DAILY_TIME, "00:00"));
     }
 
     @Override
-    public boolean onOptionsItemSelected (MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-            default:
-                break;
+        case android.R.id.home:
+            finish();
+            return true;
+        default:
+            break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -130,7 +134,7 @@ public class SettingsActivity extends PreferenceActivity implements
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
             Preference preference) {
- 
+
         if (preference == mNetworksConfig) {
             showNetworks();
             return true;
@@ -141,15 +145,18 @@ public class SettingsActivity extends PreferenceActivity implements
         } else if (preference == mSecureMode) {
             boolean value = ((CheckBoxPreference) preference).isChecked();
             mConfig.setSecureModeCurrent(value);
-            (new AlertDialog.Builder(this)).
-                setTitle(value ? R.string.secure_mode_enabled_title : R.string.secure_mode_disabled_title).
-                setMessage(Html.fromHtml(getString(value ? R.string.secure_mode_enabled_description : R.string.secure_mode_disabled_description))).
-                setCancelable(true).
-                setNeutralButton(android.R.string.ok, null).
-                show();
+            (new AlertDialog.Builder(this))
+                    .setTitle(
+                            value ? R.string.secure_mode_enabled_title
+                                    : R.string.secure_mode_disabled_title)
+                    .setMessage(
+                            Html.fromHtml(getString(value ? R.string.secure_mode_enabled_description
+                                    : R.string.secure_mode_disabled_description)))
+                    .setCancelable(true)
+                    .setNeutralButton(android.R.string.ok, null).show();
             return true;
         } else if (preference == mSchedulerDailyTime) {
-        	showTimePicker();
+            showTimePicker();
             return true;
         }
         return false;
@@ -163,8 +170,10 @@ public class SettingsActivity extends PreferenceActivity implements
             mAutoDownload.setSummary(mAutoDownload.getEntries()[idx]);
             mAutoDownload.setValueIndex(idx);
             int autoDownloadValue = Integer.valueOf(value).intValue();
-            mAutoDownloadCategory.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_CHECK);
-            mSchedulerMode.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_DISABLED);
+            mAutoDownloadCategory
+                    .setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_CHECK);
+            mSchedulerMode
+                    .setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_DISABLED);
             return true;
         } else if (preference == mBatteryLevel) {
             String value = (String) newValue;
@@ -184,7 +193,8 @@ public class SettingsActivity extends PreferenceActivity implements
     }
 
     private void showNetworks() {
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        final SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(this);
 
         int flags = prefs.getInt(UpdateService.PREF_AUTO_UPDATE_NETWORKS_NAME,
                 UpdateService.PREF_AUTO_UPDATE_NETWORKS_DEFAULT);
@@ -194,25 +204,25 @@ public class SettingsActivity extends PreferenceActivity implements
                 (flags & NetworkState.ALLOW_4G) == NetworkState.ALLOW_4G,
                 (flags & NetworkState.ALLOW_WIFI) == NetworkState.ALLOW_WIFI,
                 (flags & NetworkState.ALLOW_ETHERNET) == NetworkState.ALLOW_ETHERNET,
-                (flags & NetworkState.ALLOW_UNKNOWN) == NetworkState.ALLOW_UNKNOWN
-        };
+                (flags & NetworkState.ALLOW_UNKNOWN) == NetworkState.ALLOW_UNKNOWN };
 
-        (new AlertDialog.Builder(this)).
-                setTitle(R.string.title_networks).
-                setMultiChoiceItems(new CharSequence[] {
-                        getString(R.string.network_2g),
-                        getString(R.string.network_3g),
-                        getString(R.string.network_4g),
-                        getString(R.string.network_wifi),
-                        getString(R.string.network_ethernet),
-                        getString(R.string.network_unknown),
-                }, checkedItems, new OnMultiChoiceClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
-                        checkedItems[which] = isChecked;
-                    }
-                }).
-                setPositiveButton(android.R.string.ok, new OnClickListener() {
+        (new AlertDialog.Builder(this))
+                .setTitle(R.string.title_networks)
+                .setMultiChoiceItems(
+                        new CharSequence[] { getString(R.string.network_2g),
+                                getString(R.string.network_3g),
+                                getString(R.string.network_4g),
+                                getString(R.string.network_wifi),
+                                getString(R.string.network_ethernet),
+                                getString(R.string.network_unknown), },
+                        checkedItems, new OnMultiChoiceClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog,
+                                    int which, boolean isChecked) {
+                                checkedItems[which] = isChecked;
+                            }
+                        })
+                .setPositiveButton(android.R.string.ok, new OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         int flags = 0;
@@ -228,31 +238,30 @@ public class SettingsActivity extends PreferenceActivity implements
                             flags += NetworkState.ALLOW_ETHERNET;
                         if (checkedItems[5])
                             flags += NetworkState.ALLOW_UNKNOWN;
-                        prefs.
-                                edit().
-                                putInt(UpdateService.PREF_AUTO_UPDATE_NETWORKS_NAME, flags).
-                                commit();
+                        prefs.edit()
+                                .putInt(UpdateService.PREF_AUTO_UPDATE_NETWORKS_NAME,
+                                        flags).commit();
                     }
-                }).
-                setNegativeButton(android.R.string.cancel, null).
-                setCancelable(true).
-                show();
+                }).setNegativeButton(android.R.string.cancel, null)
+                .setCancelable(true).show();
     }
 
-	@Override
-	public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String prefValue = String.format(Locale.ENGLISH, "%02d:%02d", hourOfDay, minute);
+    @Override
+    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(this);
+        String prefValue = String.format(Locale.ENGLISH, "%02d:%02d",
+                hourOfDay, minute);
         prefs.edit().putString(PREF_SCHEDULER_DAILY_TIME, prefValue).commit();
         mSchedulerDailyTime.setSummary(prefValue);
-	}
+    }
 
-	private void showTimePicker() {
-		final Calendar c = Calendar.getInstance();
-		final int hour = c.get(Calendar.HOUR_OF_DAY);
-		final int minute = c.get(Calendar.MINUTE);
+    private void showTimePicker() {
+        final Calendar c = Calendar.getInstance();
+        final int hour = c.get(Calendar.HOUR_OF_DAY);
+        final int minute = c.get(Calendar.MINUTE);
 
-		new TimePickerDialog(this, this, hour, minute,
-				DateFormat.is24HourFormat(this)).show();
-	}
+        new TimePickerDialog(this, this, hour, minute,
+                DateFormat.is24HourFormat(this)).show();
+    }
 }

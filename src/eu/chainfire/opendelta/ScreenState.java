@@ -60,8 +60,8 @@ public class ScreenState {
                     state = false;
             }
             if (state == null) {
-                state = ((PowerManager) context.getSystemService(Context.POWER_SERVICE))
-                        .isScreenOn();
+                state = ((PowerManager) context
+                        .getSystemService(Context.POWER_SERVICE)).isScreenOn();
             }
 
             if ((stateLast == null) || (stateLast != state)) {
@@ -71,7 +71,8 @@ public class ScreenState {
         }
     }
 
-    public boolean start(Context context, OnScreenStateListener onScreenStateListener) {
+    public boolean start(Context context,
+            OnScreenStateListener onScreenStateListener) {
         if (this.context == null) {
             this.context = context;
             this.onScreenStateListener = onScreenStateListener;

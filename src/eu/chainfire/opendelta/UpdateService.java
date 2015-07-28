@@ -517,7 +517,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                     "state_" + state, "string", getPackageName()));
         } catch (Exception e) {
             // String for this state could not be found (displays empty string)
-            Logger.ex(e);                    
+            Logger.ex(e);
         }
         if (errorStateString != null) {
             notificationManager.notify(
@@ -589,8 +589,8 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                     HTTP.UTF_8);
             return responseBody;
         } catch (UnknownHostException e) {
-        	Logger.i("Failed to connect to download server");
-        	return null;
+            Logger.i("Failed to connect to download server");
+            return null;
         } catch (Exception e) {
             // Download failed for any number of reasons, timeouts, connection
             // drops, etc. Just log it in debugging mode.
@@ -1046,9 +1046,9 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             updateAllowed = networkState.getState()
                     && batteryState.getState() && isScreenStateEnabled();
             if (!updateAllowed) {
-            	// fallback to check only
-            	checkOnly = PREF_AUTO_DOWNLOAD_CHECK;
-            	updateAllowed = true;
+                // fallback to check only
+                checkOnly = PREF_AUTO_DOWNLOAD_CHECK;
+                updateAllowed = true;
                 Logger.i("Auto-dwonload not possible - fallback to check only");
             }
         }
@@ -1629,17 +1629,17 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
     }
 
     private boolean isScreenStateEnabled() {
-    	if (screenState == null) {
-    		return false;
-    	}
-    	boolean screenStateValue = screenState.getState();
-    	boolean prefValue = prefs.getBoolean(SettingsActivity.PREF_SCREEN_STATE_OFF, true);
-    	if (prefValue) {
-    	    // only when screen off
-    		return !screenStateValue;
-    	}
-    	// always allow
-    	return true;
+        if (screenState == null) {
+            return false;
+        }
+        boolean screenStateValue = screenState.getState();
+        boolean prefValue = prefs.getBoolean(SettingsActivity.PREF_SCREEN_STATE_OFF, true);
+        if (prefValue) {
+            // only when screen off
+            return !screenStateValue;
+        }
+        // always allow
+        return true;
     }
 
     public static boolean isProgressState(String state) {
