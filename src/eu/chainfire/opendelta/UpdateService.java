@@ -31,6 +31,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
+import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -587,6 +588,9 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             String responseBody = EntityUtils.toString(response.getEntity(),
                     HTTP.UTF_8);
             return responseBody;
+        } catch (UnknownHostException e) {
+        	Logger.i("Failed to connect to download server");
+        	return null;
         } catch (Exception e) {
             // Download failed for any number of reasons, timeouts, connection
             // drops, etc. Just log it in debugging mode.
@@ -785,9 +789,9 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
     }
 
     private String getNewestFullBuild() {
-        Logger.i("Checking for latest full build");
+        Logger.d("Checking for latest full build");
 
-        String url = "http://dl.omnirom.org/json.php";
+        String url = config.getUrlBaseJson();
 
         String buildData = downloadUrlMemoryAsString(url);
         if (buildData == null || buildData.length() == 0) {
@@ -1037,13 +1041,16 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         }
 
         boolean updateAllowed = false;
-        if (checkOnly == PREF_AUTO_DOWNLOAD_CHECK ) {
-            // if we only check we do it on all networks and battery levels
-            updateAllowed = isScreenStateEnabled();
-        } else if (checkOnly > PREF_AUTO_DOWNLOAD_CHECK) {
+        if (checkOnly > PREF_AUTO_DOWNLOAD_CHECK) {
             // must confirm to all if we may auto download
             updateAllowed = networkState.getState()
                     && batteryState.getState() && isScreenStateEnabled();
+            if (!updateAllowed) {
+            	// fallback to check only
+            	checkOnly = PREF_AUTO_DOWNLOAD_CHECK;
+            	updateAllowed = true;
+                Logger.i("Auto-dwonload not possible - fallback to check only");
+            }
         }
 
         if (userInitiated || updateAllowed) {
@@ -1705,8 +1712,6 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                 updateRunning = true;
 
                 try {
-                    Logger.i("Starting check for updates " + userInitiated + ":" + checkOnly + ":" + downloadFullBuild);
-
                     List<DeltaInfo> deltas = new ArrayList<DeltaInfo>();
 
                     String flashFilename = null;
@@ -1722,9 +1727,9 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                     String latestFullBuild = getNewestFullBuild();
                     // if we dont even find a build on dl no sense to continue
                     if (latestFullBuild == null) {
-                        updateState(STATE_ERROR_UNOFFICIAL, null, null, null,
-                                config.getVersion(), null);
-                        Logger.d("no latest build found for " + config.getDevice());
+                        updateState(STATE_ERROR_DOWNLOAD, null, null, null,
+                        		config.getUrlBaseJson(), null);
+                        Logger.d("no latest build found at " + config.getUrlBaseJson() + " for " + config.getDevice());
                         return;
                     }
 

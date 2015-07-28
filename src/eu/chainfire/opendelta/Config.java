@@ -65,6 +65,7 @@ public class Config {
     private final boolean secure_mode_default;
     private final boolean keep_screen_on;
     private final String filename_base_prefix;
+    private final String url_base_json;
 
     /*
      * Using reflection voodoo instead calling the hidden class directly, to
@@ -121,6 +122,7 @@ public class Config {
         inject_signature_keys = res.getString(R.string.inject_signature_keys);
         secure_mode_enable = res.getBoolean(R.bool.secure_mode_enable);
         secure_mode_default = res.getBoolean(R.bool.secure_mode_default);
+        url_base_json = res.getString(R.string.url_base_json);
         
         boolean keep_screen_on = false;
         try {
@@ -151,6 +153,8 @@ public class Config {
         Logger.d("secure_mode_enable: %d", secure_mode_enable ? 1 : 0);
         Logger.d("secure_mode_default: %d", secure_mode_default ? 1 : 0);
         Logger.d("keep_screen_on: %d", keep_screen_on ? 1 : 0);
+        Logger.d("url_base_json: %s", url_base_json);
+
     }
     
     public String getFilenameBase() {
@@ -262,5 +266,9 @@ public class Config {
 
     public String getFileBaseNamePrefix() {
         return filename_base_prefix;
+    }
+
+    public String getUrlBaseJson() {
+    	return url_base_json;
     }
 }

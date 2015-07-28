@@ -103,7 +103,6 @@ public class SettingsActivity extends PreferenceActivity implements
         int autoDownloadValue = Integer.valueOf(autoDownload).intValue();
         mAutoDownloadCategory.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_CHECK);
         mScreenState = (CheckBoxPreference) findPreference(PREF_SCREEN_STATE_OFF);
-        mScreenState.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_DISABLED);
         
         mSchedulerMode = (ListPreference) findPreference(PREF_SCHEDULER_MODE);
         mSchedulerMode.setOnPreferenceChangeListener(this);
@@ -165,7 +164,6 @@ public class SettingsActivity extends PreferenceActivity implements
             mAutoDownload.setValueIndex(idx);
             int autoDownloadValue = Integer.valueOf(value).intValue();
             mAutoDownloadCategory.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_CHECK);
-            mScreenState.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_DISABLED);
             mSchedulerMode.setEnabled(autoDownloadValue > UpdateService.PREF_AUTO_DOWNLOAD_DISABLED);
             return true;
         } else if (preference == mBatteryLevel) {

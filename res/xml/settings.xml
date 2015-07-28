@@ -43,12 +43,6 @@
 			android:key="scheduler_daily_time"
 			android:persistent="false"
 			android:title="@string/scheduler_daily_time" />
-
-		<CheckBoxPreference
-			android:defaultValue="true"
-			android:key="screen_state_off"
-			android:summary="@string/screen_state_message"
-			android:title="@string/screen_state_title" />
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:key="category_download"
@@ -56,11 +50,18 @@
 		<Preference
 			android:key="networks_config"
 			android:persistent="false"
-			android:title="@string/action_networks" />
+			android:summary="@string/networks_message"
+			android:title="@string/networks_title" />
 
 		<CheckBoxPreference
 			android:defaultValue="true"
+			android:key="screen_state_off"
+			android:summary="@string/screen_state_message"
+			android:title="@string/screen_state_title" />
+		<CheckBoxPreference
+			android:defaultValue="true"
 			android:key="charge_only"
+			android:summary="@string/charge_only_message"
 			android:title="@string/charge_only_title" />
 
 		<ListPreference
