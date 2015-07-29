@@ -1074,15 +1074,18 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         }
 
         boolean updateAllowed = false;
-        if (!userInitiated && checkOnly > PREF_AUTO_DOWNLOAD_CHECK) {
-            // must confirm to all if we may auto download
-            updateAllowed = networkState.getState()
-                    && batteryState.getState() && isScreenStateEnabled();
-            if (!updateAllowed) {
-                // fallback to check only
-                checkOnly = PREF_AUTO_DOWNLOAD_CHECK;
-                updateAllowed = true;
-                Logger.i("Auto-dwonload not possible - fallback to check only");
+        if (!userInitiated) {
+            updateAllowed = checkOnly >= PREF_AUTO_DOWNLOAD_CHECK;
+            if (checkOnly > PREF_AUTO_DOWNLOAD_CHECK) {
+                // must confirm to all if we may auto download
+                updateAllowed = networkState.getState()
+                        && batteryState.getState() && isScreenStateEnabled();
+                if (!updateAllowed) {
+                    // fallback to check only
+                    checkOnly = PREF_AUTO_DOWNLOAD_CHECK;
+                    updateAllowed = true;
+                    Logger.i("Auto-dwonload not possible - fallback to check only");
+                }
             }
         }
 
