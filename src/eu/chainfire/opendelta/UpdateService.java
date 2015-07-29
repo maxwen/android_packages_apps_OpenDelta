@@ -424,6 +424,13 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                 startErrorNotification();
             }
         }
+        if (stopDownload) {
+            // stop download is only possible in the download step
+            // that means must have done a check step before 
+            // so just fall back to this instead to show none state
+            // which is just confusing
+            checkOnly = PREF_AUTO_DOWNLOAD_CHECK;
+        }
         boolean updateAvilable = updateAvailable();
         // if the file has been downloaded or creates anytime before
         // this will aways be more important
@@ -788,6 +795,30 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         }
     }
 
+    private long getUrlDownloadSize(String url) {
+        Logger.d("getUrlDownloadSize: %s", url);
+
+        try {
+            HttpParams params = new BasicHttpParams();
+            HttpConnectionParams.setConnectionTimeout(params, 10000);
+            HttpConnectionParams.setSoTimeout(params, 10000);
+            HttpClient client = new DefaultHttpClient(params);
+            HttpGet request = new HttpGet(url);
+            HttpResponse response = client.execute(request);
+            int code = response.getStatusLine().getStatusCode();
+            if (code != HttpStatus.SC_OK) {
+                Logger.d("response: %d", code);
+                return 0;
+            }
+            return response.getEntity().getContentLength();
+        } catch (Exception e) {
+            // Download failed for any number of reasons, timeouts, connection
+            // drops, etc. Just log it in debugging mode.
+            Logger.ex(e);
+        }
+        return 0;
+    }
+
     private String getNewestFullBuild() {
         Logger.d("Checking for latest full build");
 
@@ -795,6 +826,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
 
         String buildData = downloadUrlMemoryAsString(url);
         if (buildData == null || buildData.length() == 0) {
+            updateState(STATE_ERROR_DOWNLOAD, null, null, null, url, null);
             return null;
         }
         JSONObject object = null;
@@ -822,6 +854,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             }
         } catch (Exception e) {
         }
+        updateState(STATE_ERROR_UNOFFICIAL, null, null, null, config.getVersion(), null);
         return null;
     }
 
@@ -1727,8 +1760,6 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                     String latestFullBuild = getNewestFullBuild();
                     // if we dont even find a build on dl no sense to continue
                     if (latestFullBuild == null) {
-                        updateState(STATE_ERROR_DOWNLOAD, null, null, null,
-                        		config.getUrlBaseJson(), null);
                         Logger.d("no latest build found at " + config.getUrlBaseJson() + " for " + config.getDevice());
                         return;
                     }
@@ -1864,7 +1895,15 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                             }
                         }
                         if (updateAvilable && downloadFullBuild) {
-                            prefs.edit().putString(PREF_DOWNLOAD_SIZE, getString(R.string.text_download_size_unknown)).commit();
+                            long size = getUrlDownloadSize(latestFullFetch);
+                            if (size != 0) {
+                                prefs.edit().putString(PREF_DOWNLOAD_SIZE,
+                                                String.valueOf(size)).commit();
+                            } else {
+                                prefs.edit().putString(PREF_DOWNLOAD_SIZE,
+                                                getString(R.string.text_download_size_unknown))
+                                        .commit();
+                            }
                         }
                         Logger.d("check donne: latest full build available = " + prefs.getString(PREF_LATEST_FULL_NAME, PREF_READY_FILENAME_DEFAULT) +
                                 " : updateAvilable = " + updateAvilable + " : downloadFullBuild = " + downloadFullBuild);
