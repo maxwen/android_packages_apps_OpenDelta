@@ -1878,7 +1878,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                         String latestFullZip = latestFull !=  PREF_READY_FILENAME_DEFAULT ? latestFull : null;
                         String currentVersionZip = config.getFilenameBase() +".zip";
 
-                        boolean updateAvilable = (latestFullZip != null && latestFullZip.compareTo(currentVersionZip) == 1);
+                        boolean updateAvilable = (latestFullZip != null && latestFullZip.compareTo(currentVersionZip) > 0);
                         downloadFullBuild = updateAvilable;
 
                         if (!updateAvilable) {
@@ -1946,8 +1946,8 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                         String latestDeltaZip = latestDelta != PREF_READY_FILENAME_DEFAULT ? new File(latestDelta).getName() : null;
                         String latestFullZip = latestFull !=  PREF_READY_FILENAME_DEFAULT ? latestFull : null;
                         String currentVersionZip = config.getFilenameBase() +".zip";
-                        boolean fullUpdatePossible = latestFullZip != null && latestFullZip.compareTo(currentVersionZip) == 1;
-                        boolean deltaUpdatePossible = !downloadFullBuild && latestDeltaZip != null && latestDeltaZip.compareTo(currentVersionZip) == 1 && latestDeltaZip.equals(latestFullZip);
+                        boolean fullUpdatePossible = latestFullZip != null && latestFullZip.compareTo(currentVersionZip) > 0;
+                        boolean deltaUpdatePossible = !downloadFullBuild && latestDeltaZip != null && latestDeltaZip.compareTo(currentVersionZip) > 0 && latestDeltaZip.equals(latestFullZip);
 
                         if (!deltaUpdatePossible && fullUpdatePossible) {
                             downloadFullBuild = true;
