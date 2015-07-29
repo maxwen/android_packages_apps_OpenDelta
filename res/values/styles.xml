@@ -3,12 +3,9 @@
 
 	<style name="Theme.OpenDelta" parent="@android:style/Theme.Material.Settings">
 		<item name="android:actionBarStyle">@style/ThemeActionBar</item>
-		<item name="android:colorPrimary">@color/title_text_bg</item>
 	</style>
 
-	<style name="Theme.OpenDelta.Settings" parent="@android:style/Theme.Material.Settings">
-		<item name="android:colorPrimary">@color/title_text_bg</item>
-	</style>
+	<style name="Theme.OpenDelta.Settings" parent="@android:style/Theme.Material.Settings"></style>
 
 	<style name="ThemeActionBar" parent="@android:style/Widget.Material.ActionBar.Solid">
 		<item name="android:displayOptions"></item>
