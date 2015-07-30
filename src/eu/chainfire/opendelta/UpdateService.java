@@ -84,6 +84,9 @@ import eu.chainfire.opendelta.ScreenState.OnScreenStateListener;
 public class UpdateService extends Service implements OnNetworkStateListener,
 OnBatteryStateListener, OnScreenStateListener,
 OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
+    private static final int HTTP_SOCKET_TIMEOUT = 30000;
+    private static final int HTTP_CONNECTION_TIMEOUT = 30000;
+
     public static void start(Context context) {
         start(context, null);
     }
@@ -435,15 +438,15 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         // if the file has been downloaded or creates anytime before
         // this will aways be more important
         if (checkOnly == PREF_AUTO_DOWNLOAD_CHECK && filename == null) {
-            Logger.i("Checking step done");
+            Logger.d("Checking step done");
             if (!updateAvilable) {
-                Logger.i("System up to date");
+                Logger.d("System up to date");
                 stopNotification();
                 updateState(STATE_ACTION_NONE, null, null, null, null,
                         prefs.getLong(PREF_LAST_CHECK_TIME_NAME,
                                 PREF_LAST_CHECK_TIME_DEFAULT));
             } else {
-                Logger.i("Update available");
+                Logger.d("Update available");
                 updateState(STATE_ACTION_BUILD, null, null, null, null,
                         prefs.getLong(PREF_LAST_CHECK_TIME_NAME,
                                 PREF_LAST_CHECK_TIME_DEFAULT));
@@ -458,13 +461,13 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         }
 
         if (filename == null) {
-            Logger.i("System up to date");
+            Logger.d("System up to date");
             stopNotification();
             updateState(STATE_ACTION_NONE, null, null, null, null,
                     prefs.getLong(PREF_LAST_CHECK_TIME_NAME,
                             PREF_LAST_CHECK_TIME_DEFAULT));
         } else {
-            Logger.i("Update found: %s", filename);
+            Logger.d("Update found: %s", filename);
             updateState(STATE_ACTION_READY, null, null, null, (new File(
                     filename)).getName(), prefs.getLong(
                             PREF_LAST_CHECK_TIME_NAME, PREF_LAST_CHECK_TIME_DEFAULT));
@@ -493,6 +496,9 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
 
     private void startNotification(int checkOnly) {
         final String latestFull = prefs.getString(PREF_LATEST_FULL_NAME, PREF_READY_FILENAME_DEFAULT);
+        if (latestFull == PREF_READY_FILENAME_DEFAULT) {
+            return;
+        }
         String flashFilename = prefs.getString(PREF_READY_FILENAME_NAME, PREF_READY_FILENAME_DEFAULT);
         final boolean readyToFlash = flashFilename != PREF_READY_FILENAME_DEFAULT;
         if (readyToFlash) {
@@ -546,8 +552,8 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         Logger.d("download: %s", url);
         try {
             HttpParams params = new BasicHttpParams();
-            HttpConnectionParams.setConnectionTimeout(params, 10000);
-            HttpConnectionParams.setSoTimeout(params, 10000);
+            HttpConnectionParams.setConnectionTimeout(params, HTTP_CONNECTION_TIMEOUT);
+            HttpConnectionParams.setSoTimeout(params, HTTP_SOCKET_TIMEOUT);
             HttpClient client = new DefaultHttpClient(params);
             HttpGet request = new HttpGet(url);
             HttpResponse response = client.execute(request);
@@ -582,8 +588,8 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         Logger.d("download: %s", url);
         try {
             HttpParams params = new BasicHttpParams();
-            HttpConnectionParams.setConnectionTimeout(params, 10000);
-            HttpConnectionParams.setSoTimeout(params, 10000);
+            HttpConnectionParams.setConnectionTimeout(params, HTTP_CONNECTION_TIMEOUT);
+            HttpConnectionParams.setSoTimeout(params, HTTP_SOCKET_TIMEOUT);
             HttpClient client = new DefaultHttpClient(params);
             HttpGet request = new HttpGet(url);
             HttpResponse response = client.execute(request);
@@ -624,8 +630,8 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             f.delete();
         try {
             HttpParams params = new BasicHttpParams();
-            HttpConnectionParams.setConnectionTimeout(params, 10000);
-            HttpConnectionParams.setSoTimeout(params, 10000);
+            HttpConnectionParams.setConnectionTimeout(params, HTTP_CONNECTION_TIMEOUT);
+            HttpConnectionParams.setSoTimeout(params, HTTP_SOCKET_TIMEOUT);
             HttpClient client = new DefaultHttpClient(params);
             HttpGet request = new HttpGet(url);
             HttpResponse response = client.execute(request);
@@ -704,8 +710,8 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
             updateState(STATE_ACTION_DOWNLOADING, 0f, 0L, 0L, f.getName(), null);
 
             HttpParams params = new BasicHttpParams();
-            HttpConnectionParams.setConnectionTimeout(params, 10000);
-            HttpConnectionParams.setSoTimeout(params, 10000);
+            HttpConnectionParams.setConnectionTimeout(params, HTTP_CONNECTION_TIMEOUT);
+            HttpConnectionParams.setSoTimeout(params, HTTP_SOCKET_TIMEOUT);
             HttpClient client = new DefaultHttpClient(params);
             HttpGet request = new HttpGet(url);
             HttpResponse response = client.execute(request);
@@ -800,8 +806,8 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
 
         try {
             HttpParams params = new BasicHttpParams();
-            HttpConnectionParams.setConnectionTimeout(params, 10000);
-            HttpConnectionParams.setSoTimeout(params, 10000);
+            HttpConnectionParams.setConnectionTimeout(params, HTTP_CONNECTION_TIMEOUT);
+            HttpConnectionParams.setSoTimeout(params, HTTP_SOCKET_TIMEOUT);
             HttpClient client = new DefaultHttpClient(params);
             HttpGet request = new HttpGet(url);
             HttpResponse response = client.execute(request);
@@ -2046,7 +2052,8 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                             if (latestFullMd5 != null){
                                 downloadFullBuild(latestFullFetch, latestFullMd5, latestFullBuild);
                             } else {
-                                Logger.d("aborting download due to md5sum not found");                            }
+                                Logger.d("aborting download due to md5sum not found");
+                            }
                         } else {
                             Logger.d("aborting download due to network state");
                         }

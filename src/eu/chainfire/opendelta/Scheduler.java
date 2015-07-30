@@ -105,7 +105,7 @@ public class Scheduler implements OnScreenStateListener,
     }
 
     private void setSecondaryWakeAlarm() {
-        Logger.i(
+        Logger.d(
                 "Setting secondary alarm (inexact) for %s",
                 sdfLog.format(new Date(System.currentTimeMillis()
                         + ALARM_SECONDARY_WAKEUP_TIME)));
@@ -115,7 +115,7 @@ public class Scheduler implements OnScreenStateListener,
     }
 
     private void cancelSecondaryWakeAlarm() {
-        Logger.i("Cancelling secondary alarm");
+        Logger.d("Cancelling secondary alarm");
         alarmManager.cancel(alarmSecondaryWake);
     }
 
@@ -130,7 +130,7 @@ public class Scheduler implements OnScreenStateListener,
     }
 
     private void cancelDetectSleepAlarm() {
-        Logger.i("Cancelling sleep detection alarm");
+        Logger.d("Cancelling sleep detection alarm");
         alarmManager.cancel(alarmDetectSleep);
     }
 

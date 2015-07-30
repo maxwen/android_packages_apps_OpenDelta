@@ -291,7 +291,7 @@ public class MainActivity extends Activity {
 
                 if (deltaUpdatePossible) {
                     String latestDeltaBase = latestDelta.substring(0,
-                            latestFull.lastIndexOf('.'));
+                            latestDelta.lastIndexOf('.'));
                     enableBuild = true;
                     updateVersion = latestDeltaBase;
                     title = getString(R.string.state_action_build_delta);
