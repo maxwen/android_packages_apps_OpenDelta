@@ -1459,7 +1459,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         String flashFilename = prefs.getString(PREF_READY_FILENAME_NAME, PREF_READY_FILENAME_DEFAULT);
         String intialFile = prefs.getString(PREF_INITIAL_FILE, PREF_READY_FILENAME_DEFAULT);
 
-        clearState();
+        clearState(prefs);
 
         if ((flashFilename == null)
                 || !flashFilename.startsWith(config.getPathBase()))
@@ -1735,7 +1735,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
         return timeSnooze;
     }
 
-    private void clearState() {
+    public static void clearState(SharedPreferences prefs) {
         prefs.edit().putString(PREF_LATEST_FULL_NAME, PREF_READY_FILENAME_DEFAULT).commit();
         prefs.edit().putString(PREF_LATEST_DELTA_NAME, PREF_READY_FILENAME_DEFAULT).commit();
         prefs.edit().putString(PREF_READY_FILENAME_NAME, PREF_READY_FILENAME_DEFAULT).commit();
@@ -1793,7 +1793,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
                     (new File(config.getPathBase())).mkdir();
                     (new File(config.getPathFlashAfterUpdate())).mkdir();
 
-                    clearState();
+                    clearState(prefs);
 
                     String latestFullBuild = getNewestFullBuild();
                     // if we dont even find a build on dl no sense to continue
@@ -2099,7 +2099,7 @@ OnWantUpdateCheckListener, OnSharedPreferenceChangeListener {
 
                     if (isErrorState(state)) {
                         failedUpdateCount++;
-                        clearState();
+                        clearState(prefs);
                         if (!userInitiated) {
                             shouldShowErrorNotification();
                         }
