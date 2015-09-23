@@ -91,7 +91,7 @@ public class Config {
 
         Resources res = context.getResources();
 
-        property_version ="5.1.1-20150804-find7-NIGHTLY";
+        property_version ="5.1.1-20150902-find7-NIGHTLY";
 
         //property_version = getProperty(context,
         //        res.getString(R.string.property_version), "");
